@@ -3,6 +3,9 @@ var calibrationImg;
 var calibrationTxt;
 
 var initBox = function () {
+    if (calibrationImg && calibrationTxt) {
+	return;
+    }
     var div = document.createElement("div");
     div.style.position = "absolute";
     div.style.visibility = "hidden";

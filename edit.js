@@ -1,5 +1,5 @@
 var operations = {
-    priorityMode: false,
+    priorityMode: true,
     binop: function (Op, e, rhs) {
 	if (!rhs) {
 	    rhs = expr.editExpr();
