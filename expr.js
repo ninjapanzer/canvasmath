@@ -8,6 +8,12 @@ var expr = {
     neg: function (x) {
 	return Negation.instanciate(x);
     },
+    plusMinus: function (x) {
+	return PlusMinus.instanciate(x);
+    },
+    minusPlus: function (x) {
+	return MinusPlus.instanciate(x);
+    },
     brackets: function (x) {
 	return Bracket.instanciate(x);
     },
@@ -244,23 +250,23 @@ var Parameter = {
 };
 Parameter = Expression.specialise(Parameter);
 
-var Negation = {
-    __name__: "Negation",
-    isNegation: true,
+var PrefixOperation = {
+    __name__: "PrefixOperation",
+    isPrefixOperation: true,
     __init__: function (val) {
 	this.value = val;
 	val.setRelations(this, null, null);
     },
     layout: function (layout) {
-	var lneg = layout.text("-");
+	var lneg = layout.text(this.prefixText);
 	var lval = this.subLayout(layout, this.value);
 	var ltrain = layout.train(lneg, lval);
-	lneg.bindExpr(this, "neg");
+	lneg.bindExpr(this, "prefix");
 	ltrain.bindExpr(this);
 	return ltrain;
     },
     copy: function () {
-	return expr.neg(this.value.copy());
+	return this.__proto__.instanciate(this.value.copy());
     },
     replaceChild: function (oldChild, newChild) {
 	if (oldChild === this.value) {
@@ -278,7 +284,32 @@ var Negation = {
 	}
     }
 };
-Negation = Expression.specialise(Negation);
+PrefixOperation = Expression.specialise(PrefixOperation);
+
+var Negation = {
+    __name__: "Negation",
+    isNegation: true,
+    prefixText: "-",
+    termSeparator: "\u2212"
+};
+Negation = PrefixOperation.specialise(Negation);
+
+
+var PlusMinus = {
+    __name__: "PlusMinus",
+    isPlusMinus: true,
+    prefixText: "\u00b1",
+    termSeparator: "\u00b1"
+};
+PlusMinus = PrefixOperation.specialise(PlusMinus);
+
+var MinusPlus = {
+    __name__: "MinusPlus", 
+    isMinusPlus: true,
+    prefixText: "\u2213",
+    termSeparator: "\u2213"
+};
+MinusPlus = PrefixOperation.specialise(MinusPlus);
 
 var Bracket = {
     __name__: "Bracket",
@@ -291,18 +322,9 @@ var Bracket = {
     layout: function (layout) {
 	var lbracket;
 	var lexpr = layout.ofExpr(this.expr);
-	//if (this.containsSelection) {
-	    lbracket = layout.bracket(lexpr, "red");
-	    lbracket.bindExpr(this);
-	    return lbracket;
-	/*}
-	if (!this.parent.isContainer && this.expr.priority < this.parent.priority) {
-	    lbracket = layout.bracket(lexpr);
-	    lbracket.bindExpr(this);
-	    return lbracket;
-	} else {
-	    return lexpr;
-	}*/
+	lbracket = layout.bracket(lexpr, "red");
+	lbracket.bindExpr(this);
+	return lbracket;
     },
     copy: function () {
 	return expr.brackets(this.expr.copy());
@@ -484,10 +506,10 @@ var Sum = {
     pushOp: function (layout, train, i, forceOp) {
 	var op;
 	var term = this.operands[i];
-	if (i || forceOp || term.__proto__ === Negation) {
-	    if (term.__proto__ === Negation) {
-		op = layout.text("\u2212");
-		term = term.firstChild;
+	if (i) {
+	    if (term.termSeparator) {
+		op = layout.text(term.termSeparator);
+		term = term.value;
 	    } else {
 		op = layout.text("+");
 	    }

@@ -35,10 +35,12 @@ var operations = {
 	operations.mult(e, expr.brackets(rhs));
 	return rhs;
     },
-    sub: function (e) {
-	var rhs = expr.editExpr();
-	operations.add(e, expr.neg(rhs));
-	return rhs;
+    addprefixop: function (maker) {
+	return function (e) {
+	    var rhs = expr.editExpr();
+	    operations.add(e, maker(rhs));
+	    return rhs;
+	}
     },
     pow: function (e) {
 	var p = e.parent;
@@ -57,17 +59,15 @@ var operations = {
 	e.parent.replaceChild(e, expr.fraction(e.copy(), rhs));
 	return rhs;
     },
-    neg: function (e) {
-	var p = e.parent;
-	var ce = e.copy();
-	p.replaceChild(e, expr.neg(ce));
-	return ce;
-    },
-    bracket: function (e) {
-	var p = e.parent;
-	var ce = e.copy();
-	p.replaceChild(e, expr.brackets(ce));
-	return ce;
+    prefixop: function (maker) {
+	return function (e) {
+	    var p = e.parent;
+	    var ce = e.copy();
+	    var cex = maker(ce);
+	    console.log(maker, ce, cex);
+	    p.replaceChild(e, maker(ce));
+	    return ce;
+	};
     },
     closeBracket: function (e) {
 	var p;
@@ -115,7 +115,10 @@ var operations = {
 var infixBinaryOps = {
     "+": operations.add,
     "*": operations.mult,
-    "-": operations.sub,
+    "-": operations.addprefixop(expr.neg),
+    "±": operations.addprefixop(expr.plusMinus),
+    "+-": operations.addprefixop(expr.plusMinus),
+    "-+": operations.addprefixop(expr.minusPlus),
     "/": operations.frac,
     "^": operations.pow,
     "(": operations.multByBracket,
@@ -125,8 +128,11 @@ var infixBinaryOps = {
 };
 
 var prefixUnaryOps = {
-    "-": operations.neg,
-    "(": operations.bracket
+    "-": operations.prefixop(expr.neg),
+    "±": operations.prefixop(expr.plusMinus),
+    "+-": operations.prefixop(expr.plusMinus),
+    "-+": operations.prefixop(expr.minusPlus),
+    "(": operations.prefixop(expr.brackets)
 };
 
 var postfixUnaryOps = {
