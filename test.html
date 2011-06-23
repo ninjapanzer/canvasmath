@@ -1,0 +1,45 @@
+<html>
+<head>
+  <script src="lib.js"></script>
+  <script src="box.js"></script>
+  <script src="layout.js"></script>
+  <script src="expr.js"></script>
+  <script src="shortcuts.js"></script>
+  <script src="edit.js"></script>
+  <script src="serialize.js"></script>
+  <script src="test.js"></script>
+  <script type="text/javascript">
+   window.onload = testOnLoad;
+  </script>
+<style type="text/css">
+h3, h4, h5 {
+    margin: 0px;
+}
+</style>
+</head>
+<body>
+<h3>Javascript + Canvas Equation Editor Playground(Chrome only for now)</h3>
+<input type="checkbox" id="priority-mode"  />Priority Mode (check this for input to follow operator priority - quicker but can be confusing for some!)<br>
+<canvas id="testcvs" width="700" height="300" style="border: 1px solid red"></canvas>
+<h5>Text area for serialization/deserialization</h5>
+<textarea id="serialization" style="width: 702px; height: 4em;"></textarea>
+<h4>Commands</h4>
+<ul>
+  <li><span id="create-shortcut"></span>: Create new expression (mouse must be in the red rectangle)</li>
+  <li><span id="copy-shortcut"></span>: Copy selection to clipboard</li>
+  <li><span id="paste-shortcut"></span>: Paste clipboard content into selection</li>
+  <li><span id="cut-shortcut"></span>: Cut selection and put it in clipboard</li>
+  <li><span id="serialize-shortcut"></span>: <input type="button" id="serialize" value="Serialize"/> selection using <select id="serializer"></select> serializer</li>
+  <li>Backspace: delete selection or last input character</li>
+  <li>Tab: cycle through possible keyword completions</li>
+  <li>Enter: validate current completion</li>
+  <li>Arrows: move selection within expression: UP to parent expression, DOWN to subexpression, LEFT to previous sibling and RIGHT to next sibling</li>
+</ul>
+<h4>Known prefix keywords</h4>
+<div id="prefixkwlist"></div>
+<h4>Known postfix keywords</h4>
+<div id="postfixkwlist"></div>
+<h4>Serializer</h4>
+
+</body>
+</html>
