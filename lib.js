@@ -2,7 +2,7 @@ var Prototype = {
     __name__: "Prototype",
     __init__: function (spec) {
 	if (spec) {
-	    for (prop in spec) {
+	    for (var prop in spec) {
 		if (spec.hasOwnProperty(prop)) {
 		    this[prop] = spec[prop];
 		}
@@ -12,19 +12,26 @@ var Prototype = {
     },
     specialise: function (spec) {
 	var name = spec && spec.__name__ || this.__name__;
-	eval("var F = function " + name + " () {};");
+	var F;
+	eval("F = function " + name + " () {};");
 	F.prototype = this;
 	var obj = new F();
+	if (!obj.hasOwnProperty("__proto__")) {
+	    obj.__proto__ = this;
+	}
 	if (spec) {
-	    for (prop in spec) {
+	    for (var prop in spec) {
 		if (spec.hasOwnProperty(prop)) {
-		    var g = spec.__lookupGetter__(prop);
-		    var s = spec.__lookupSetter__(prop);
+		    var desc = Object.getOwnPropertyDescriptor(spec, prop);
+		    var g = desc.get;
+		    var s = desc.set;
 		    if ( g || s ) {
+			var def = {};
 			if ( g )
-			    obj.__defineGetter__(prop, g);
+			    def.get = g;
 			if ( s )
-			    obj.__defineSetter__(prop, s);
+			    def.set = s;
+			Object.defineProperty(obj, prop, def);
 		    } else {
 			obj[prop] = spec[prop];
 		    }
@@ -42,7 +49,7 @@ var Prototype = {
 	return this[prop].bind(this);
     },
     addMixin: function (mixin) {
-	for (prop in mixin) {
+	for (var prop in mixin) {
 	    if (mixin.hasOwnProperty(prop)) {
 		if (this[prop]) {
 		    throw "object has property '" + prop + "' already"; 

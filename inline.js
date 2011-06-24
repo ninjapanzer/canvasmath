@@ -11,9 +11,9 @@ var transformInline = function (tagname) {
 	editor.interpret(edit, text);
 	box = layout.ofExpr(root).box();
 	canvas = $.make("canvas", {
-	    width: box.width,
+	    width: box.width + 2, // +2 is for IE9...
 	    height: box.height,
-	    style: "vertical-align: " + box.descent + ";"
+	    style: "vertical-align: " + box.descent + "px;"
 	});
 	ctx = canvas.getContext("2d");
 	box.drawOnCanvas(ctx, 0, box.ascent);

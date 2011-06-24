@@ -615,12 +615,17 @@ var Power = {
 	} else {
 	    return false;
 	}
-    },
+    }/* Removed for compatibility with IE9
     get needsFactorSeparator() {
 	return this.base.needsFactorSeparator;
-    }
+    }*/
 };
 Power = Expression.specialise(Power);
+Object.defineProperty(Power, "needsFactorSeparator", {
+    get: function () {
+	return this.base.needsFactorSeparator;
+    }
+});
 
 var Fraction = {
     __name__: "Fraction",

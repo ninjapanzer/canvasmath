@@ -396,10 +396,10 @@ var HLine = {
     calculate: function () {
 	this.ascent = this.height*0.5;
 	this.descent = -this.ascent;
-    },
+    },/* Removed for compatibility with IE9
     get width() {
 	return this._width || (this.stack && this.stack.width) || 0;
-    },
+    },*/
     drawOnCanvas: function (ctx, x, y) {
 	ctx.save();
 	ctx.fillStyle = "black";
@@ -408,6 +408,12 @@ var HLine = {
     }
 };
 HLine = Box.specialise(HLine);
+// Instead of get width() for compatibility with IE9
+Object.defineProperty(HLine, "width", {
+    get: function () {
+	return this._width || (this.stack && this.stack.width) || 0;
+    }
+});
 
 var ColorBox = {
     __name__: "ColorBox",

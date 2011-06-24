@@ -64,7 +64,6 @@ var operations = {
 	    var p = e.parent;
 	    var ce = e.copy();
 	    var cex = maker(ce);
-	    console.log(maker, ce, cex);
 	    p.replaceChild(e, maker(ce));
 	    return ce;
 	};
