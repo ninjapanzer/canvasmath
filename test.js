@@ -243,7 +243,6 @@ var testOnLoad = function () {
     };
     Object.forEachItem(serializers, function (s) {
 	if (serializers.hasOwnProperty(s)) {
-	    console.log(s);
 	    $("serializer").appendChild($.make("option", {name: s}, s));
 	}
     });
