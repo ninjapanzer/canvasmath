@@ -1,6 +1,6 @@
 var expr = {
     number: function (n) {
-	return Number.instanciate(n);
+	return Number_.instanciate(n);
     },
     parameter: function (name, value) {
 	return Parameter.instanciate(name, value);
@@ -217,8 +217,8 @@ var RootExpression = {
 };
 RootExpression = Expression.specialise(RootExpression);
 
-var Number = {
-    __name__: "Number",
+var Number_ = {
+    __name__: "Number_",
     __init__: function (value) {
 	this.value = value;
     },
@@ -235,7 +235,7 @@ var Number = {
     },
     needsFactorSeparator: true
 };
-Number = Expression.specialise(Number);
+Number_ = Expression.specialise(Number_);
 
 var Parameter = {
     __name__: "Parameter",
@@ -952,7 +952,7 @@ EditExpr = Expression.specialise(EditExpr);
 //
 
 var priorities = [
-    [Number, 100],
+    [Number_, 100],
     [Parameter, 100],
     [EditExpr, 100],
     [Matrix, 7],
