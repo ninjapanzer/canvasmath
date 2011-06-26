@@ -1,6 +1,6 @@
 var expr = {
-    integer: function (n) {
-	return Integer.instanciate(n);
+    number: function (n) {
+	return Number.instanciate(n);
     },
     parameter: function (name, value) {
 	return Parameter.instanciate(name, value);
@@ -217,8 +217,8 @@ var RootExpression = {
 };
 RootExpression = Expression.specialise(RootExpression);
 
-var Integer = {
-    __name__: "Integer",
+var Number = {
+    __name__: "Number",
     __init__: function (value) {
 	this.value = value;
     },
@@ -231,11 +231,11 @@ var Integer = {
 	return true;
     },
     copy: function () {
-	return expr.integer(this.value);
+	return expr.number(this.value);
     },
     needsFactorSeparator: true
 };
-Integer = Expression.specialise(Integer);
+Number = Expression.specialise(Number);
 
 var Parameter = {
     __name__: "Parameter",
@@ -952,7 +952,7 @@ EditExpr = Expression.specialise(EditExpr);
 //
 
 var priorities = [
-    [Integer, 100],
+    [Number, 100],
     [Parameter, 100],
     [EditExpr, 100],
     [Matrix, 7],

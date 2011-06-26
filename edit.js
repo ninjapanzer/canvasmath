@@ -258,7 +258,7 @@ postfixKeywords.updateWithObject(postfixUnaryOps, "PostfixOp");
 
 var editor = {
     interpretNumber: function (input, target) {
-	var numberExpr = expr.integer(parseFloat(input));
+	var numberExpr = expr.number(parseFloat(input));
 	if (target.operand) {
 	    target.parent.replaceChild(target, target.operand);
 	    operations.mult(target.operand, numberExpr);
