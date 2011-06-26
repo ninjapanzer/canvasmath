@@ -22,8 +22,8 @@ var transformInline = function (tagname) {
 };
 
 if (!this.preventAutomaticTransform) {
-    window.onload = function () {
+    window.addEventListener("load", function () {
 	transformInline();
-    };
+    });
 }
 
