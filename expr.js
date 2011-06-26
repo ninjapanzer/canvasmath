@@ -185,7 +185,11 @@ var Expression = {
 	    p.containsSelection = false;
 	}
     },
-    needsFactorSeparator: false
+    needsFactorSeparator: false,
+    sumSeparator: operators.infix.plus,
+    getSumExpression: function () {
+	return this;
+    }
 };
 Expression = Prototype.specialise(Expression);
 
@@ -282,6 +286,9 @@ var PrefixOperation = {
 	} else {
 	    return null;
 	}
+    },
+    getSumExpression: function () {
+	return this.value;
     }
 };
 PrefixOperation = Expression.specialise(PrefixOperation);
@@ -290,7 +297,7 @@ var Negation = {
     __name__: "Negation",
     isNegation: true,
     prefixText: "-",
-    termSeparator: "\u2212"
+    sumSeparator: operators.infix.minus
 };
 Negation = PrefixOperation.specialise(Negation);
 
@@ -299,7 +306,7 @@ var PlusMinus = {
     __name__: "PlusMinus",
     isPlusMinus: true,
     prefixText: "\u00b1",
-    termSeparator: "\u00b1"
+    sumSeparator: operators.infix.plusMinus
 };
 PlusMinus = PrefixOperation.specialise(PlusMinus);
 
@@ -307,7 +314,7 @@ var MinusPlus = {
     __name__: "MinusPlus", 
     isMinusPlus: true,
     prefixText: "\u2213",
-    termSeparator: "\u2213"
+    sumSeparator: operators.infix.minusPlus
 };
 MinusPlus = PrefixOperation.specialise(MinusPlus);
 
@@ -507,16 +514,10 @@ var Sum = {
 	var op;
 	var term = this.operands[i];
 	if (i) {
-	    if (term.termSeparator) {
-		op = layout.text(term.termSeparator);
-		term = term.value;
-	    } else {
-		op = layout.text("+");
-	    }
-	    train.push(layout.hspace(3));
+	    op = term.sumSeparator.layout(layout);
+	    op.bindExpr(term);
+	    term = term.getSumExpression();
 	    train.push(op);
-	    train.push(layout.hspace(3));
-	    op.bindExpr(this, i);
 	}
 	train.push(this.subLayout(layout, term));
     }
@@ -529,10 +530,8 @@ var Equation = {
     pushOp: function (layout, train, i, forceOp) {
 	var op;
 	if (i) {
-	    op = layout.text("=");
-	    train.push(layout.hspace(5));
+	    op = operators.infix.eq.layout(layout);
 	    train.push(op);
-	    train.push(layout.hspace(5));
 	    op.bindExpr(this, i);
 	}
 	train.push(this.subLayout(layout, this.operands[i]));
@@ -557,7 +556,7 @@ var Product = {
 	var op;
 	var factor = this.operands[i];
 	if (i && (factor.needsFactorSeparator)) {
-	    op = layout.text("\u00D7");
+	    op = operators.infix.times.layout(layout);
 	    train.push(op);
 	    op.bindExpr(this, i);
 	}
