@@ -25,6 +25,20 @@ if (!this.preventAutomaticTransform) {
 }
 
 var mathMLParser = {
+    functions: {},
+    registerFunction: function (name, arity, applyMethod) {
+	this.functions[name] = {
+	    name: name,
+	    arity: arity,
+	    apply: applyMethod
+	};
+	this[name] = function (node) {
+	    if (node.firstElementChild) {
+		throw "<" + name + "> should be an empty tag";
+	    }
+	    return expr.Parameter(name);
+	};
+    },
     parse: function (el) {
 	if (this[el.tagName]) {
 	    var e = this[el.tagName](el);
@@ -34,10 +48,18 @@ var mathMLParser = {
 	}
     },
     parseFunc: function (funcName, args) {
-	if (this[funcName]) {
-	    return this[funcName](args);
+	var func = this.functions[funcName];
+	if (!func) {
+	    throw "unknown function: " + funcName;
+	}
+	if (func.arity) {
+	    if (args.length !== func.arity) {
+		throw ("Function " + funcName + "expects " +
+		       func.arity + " arguments, got " + args.length);
+	    }
+	    return func.apply.apply(func, args);
 	} else {
-	    return expr.editExpr("?" + funcName + "?");
+	    return func.apply.call(func, args);
 	}
     },
     apply: function (node) {
@@ -51,15 +73,6 @@ var mathMLParser = {
 	}
 	return this.parseFunc(funcName, args);
     },
-    plus: function (args) {
-	return expr.sum(args);
-    },
-    times: function (args) {
-	return expr.product(args);
-    },
-    power: function (args) {
-	return expr.power(args[0], args[1]);
-    },
     sin: function (args) {
 	return expr.trigFunction("sin", args[0]);
     },
@@ -71,3 +84,40 @@ var mathMLParser = {
     }    
 };
 
+var mathMLElements = {
+    unaryStandardFunctions: [
+	'sin', 'cos', 'tan', 'sec', 'csc', 'cot',
+	'sinh', 'cosh', 'tanh', 'sech', 'csch', 'coth',
+	'arcsin', 'arccos', 'arctan', 'arcsec', 'arccsc', 'arccot',
+	'arcsinh', 'arccosh', 'arctanh', 'arcsech', 'arccsch', 'arccoth',
+	'exp', 'ln', 'log'
+    ]
+};
+
+mathMLElements.unaryStandardFunctions.forEach(function (fn) {
+    mathMLParser.registerFunction(fn, 1, function (arg) {
+	return expr.trigFunction(fn, arg);
+    });
+});
+
+mathMLParser.registerFunction("plus", null, function (args) {
+    return expr.sum(args);
+});
+mathMLParser.registerFunction("times", null, function (args) {
+    return expr.product(args);
+});
+mathMLParser.registerFunction("power", 2, function (base, pow) {
+    return expr.power(base, pow);
+});
+mathMLParser.registerFunction("minus", null, function (args) {
+    if (args.length === 1) {
+	return expr.negation(args[0]);
+    } else if (args.length === 2) {
+	return expr.sum(args[0], expr.negation(args[1]));
+    } else {
+	throw "minus expects 1 or 2 arguments, got " + args.length;
+    }
+});
+mathMLParser.registerFunction("divide", 2, function (num, den) {
+    return expr.fraction(num, den);
+});

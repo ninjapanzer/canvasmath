@@ -9,7 +9,7 @@ var SimpleSerializer = {
     RootExpression: function (e) {
 	return this.serialize(this.expr);
     },
-    Integer: function (n) {
+    Number: function (n) {
 	return n.value.toString();
     },
     Parameter: function (p) {
@@ -81,7 +81,7 @@ var RPNSerializer = {
     RootExpression: function (e, stack) {
 	this.serializeToStack(this.expr, stack);
     },
-    Integer: function (n, stack) {
+    Number: function (n, stack) {
 	stack.push(n.value.toString());
     },
     Parameter: function (p, stack) {
@@ -169,7 +169,7 @@ var LaTeXSerializer = {
     RootExpression: function (e) {
 	return this.serialize(this.expr);
     },
-    Integer: function (n) {
+    Number: function (n) {
 	return n.value.toString();
     },
     Parameter: function (p) {
@@ -270,3 +270,147 @@ var MaximaSerializer = {
 };
 MaximaSerializer = SimpleSerializer.specialise(MaximaSerializer);
 
+var MathMLSerializer = {
+    serialize: function (e, indent, indentStep) {
+	var bits = [];
+	this.objectToBits(this.exprToObject(e), bits);
+	return this.bitsToMathML(bits, indent || 0, indentStep || 2);
+    },
+    exprToObject: function (e) {
+	return this[e.__name__](e);
+    },
+    objectToBits: function (obj, bits) {
+	var self = this;
+	switch (typeof obj) {
+	case "object":
+	    if (!obj.children || obj.children.length === 0) {
+		bits.push({
+		    type: "emptyTag",
+		    text: "<" + obj.tag + "/>"
+		});
+		return;
+	    }
+	    bits.push({
+		type: "openTag",
+		text: "<" + obj.tag + ">"
+	    });
+	    obj.children.forEach(function (child) {
+		self.objectToBits(child, bits);
+	    });
+	    bits.push({
+		type: "closeTag",
+		text: "</" + obj.tag + ">"
+	    });
+	    return;
+	case "number":
+	    bits.push({
+		type: "text",
+		text: obj.toString()
+	    });
+	    return;
+	case "string":
+	    bits.push({
+		type: "text",
+		text: obj
+	    });
+	    return;
+	}
+    },
+    bitsToMathML: function (bits, indent, indentStep) {
+	var spaces = "                                                                                   ";
+	var lines = [];
+	var indentSpaces = spaces.substr(indent);
+	var inlineTag = false;
+	bits.forEach(function (bit, i) {
+	    switch (bit.type) {
+	    case "emptyTag":
+		lines.push(spaces.substr(0, indent) + bit.text);
+		break;
+	    case "openTag":
+		lines.push(spaces.substr(0, indent) + bit.text);
+		indent += indentStep;
+		break;
+	    case "text":
+		inlineTag = bits[i + 1].type === "closeTag";
+		if (inlineTag) {
+		    lines[lines.length - 1] += bit.text;
+		}
+		break;
+	    case "closeTag":
+		indent -= indentStep;
+		if (inlineTag) {
+		    lines[lines.length - 1] += bit.text;
+		    inlineTag = false;
+		} else {
+		    lines.push(spaces.substr(0, indent) + bit.text);
+		}
+		break;
+	    }
+	});
+	return lines.join("\n");
+    },
+    apply: function (fn, args) {
+	var self = this;
+	var applyArgs = [{tag: fn}];
+	args.forEach(function (arg) {
+	    applyArgs.push(self.exprToObject(arg));
+	});
+	return {
+	    tag: "apply",
+	    children: applyArgs
+	};
+    },
+    RootExpression: function (e) {
+	return this.exprToObject(e.expr);
+    },
+    Number: function (n) {
+	return {
+	    tag: "cn",
+	    children: [n.value.toString()]
+	};
+    },
+    Parameter: function (p) {
+	return {
+	    tag: "ci",
+	    children: [p.name]
+	};
+    },
+    Negation: function (e) {
+	return this.apply("minus", [e.value]);
+    },
+    Bracket: function (e) {
+	return this.exprToObject(e.expr);
+    },
+    Sum: function (e) {
+	if (e.operands.length === 2 && e.operands[1].isNegation) {
+	    return this.apply("minus", [e.operands[0], e.operands[1].value]);
+	}
+	return this.apply("plus", e.operands);
+    },
+    Product: function (e) {
+	return this.apply("times", e.operands);
+    },
+    Equation: function (e) {
+	return this.apply("eq", e.operands);
+    },
+    Power: function (e) {
+	return this.apply("power", [e.base, e.power]);
+    },
+    Fraction: function (e) {
+	return this.apply("divide", [e.num, e.den]);
+    },
+    Sqrt: function (e) {
+	return this.apply("sqrt", [e.expr]);
+    },
+    TrigFunction: function (e) {
+	return this.apply(e.name, [e.arg]);
+    }
+    /* XXX Matrix: function (e) {
+	var self = this;
+	return "(" + e.rows.map(function (row) {
+	    return row.map(function (item) { return self.serialize(item); }).
+		join(", ");
+	}).join("; ") + ")";
+    }*/
+};
+MathMLSerializer = Prototype.specialise(MathMLSerializer);

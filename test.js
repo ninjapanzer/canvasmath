@@ -239,7 +239,8 @@ var testOnLoad = function () {
 	RPN: RPNSerializer,
 	LaTeX: LaTeXSerializer,
 	GeoGebra: GeoGebraSerializer,
-	Maxima: MaximaSerializer
+	Maxima: MaximaSerializer,
+	MathML: MathMLSerializer
     };
     Object.forEachItem(serializers, function (s) {
 	if (serializers.hasOwnProperty(s)) {

@@ -218,7 +218,7 @@ var RootExpression = {
 RootExpression = Expression.specialise(RootExpression);
 
 var Number_ = {
-    __name__: "Number_",
+    __name__: "Number",
     __init__: function (value) {
 	this.value = value;
     },
@@ -244,7 +244,11 @@ var Parameter = {
 	this.value = value || name;
     },
     layout: function (layout) {
-	var ltext = layout.text(this.value, {style: "italic"});
+	var options = null;
+	if (this.value.length === 1) {
+	    options = {style: "italic"};
+	}
+	var ltext = layout.text(this.value, options);
 	ltext.bindExpr(this);
 	return ltext;
     },
