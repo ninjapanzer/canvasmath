@@ -38,6 +38,21 @@ var expr = {
     sqrt: function (e) {
 	return Sqrt.instanciate(e);
     },
+    abs: function (e) {
+	return Abs.instanciate(e);
+    },
+    ceiling: function (e) {
+	return Ceiling.instanciate(e);
+    },
+    conjugate: function (e) {
+	return Conjugate.instanciate(e);
+    },
+    factorial: function (e) {
+	return Factorial.instanciate(e);
+    },
+    floor: function (e) {
+	return Floor.instanciate(e);
+    },
     trigFunction: function (name, e, pow) {
 	return TrigFunction.instanciate(name, e, pow);
     },
@@ -60,9 +75,6 @@ var Expression = {
     },
     isNumber: function () {
 	return false;
-    },
-    replace: function (e) {
-	this.parent.replaceChild(this, e);
     },
     removeChild: function (e) {
 	return false;
@@ -192,6 +204,26 @@ var Expression = {
     }
 };
 Expression = Prototype.specialise(Expression);
+
+var OneChildExpression = {
+    __name__: "OneChildExpression",
+    __init__: function (child) {
+	this.child = child;
+	child.setRelations(this);
+    },
+    copy: function () {
+	return this.__proto__.instanciate(this.child.copy());
+    },
+    replaceChild: function (oldChild, newChild) {
+	if (this.child === oldChild) {
+	    this.child = newChild;
+	    newChild.setRelations(this);
+	    return true;
+	}
+	return false;
+    }
+};
+OneChildExpression = Expression.specialise(OneChildExpression);
 
 var RootExpression = {
     __name__: "RootExpression",
@@ -811,7 +843,7 @@ var Matrix = {
 	    });
 	});
 	var ltable = layout.table(lrows, 7, 2);
-	var lbracket = layout.bracket(ltable);
+	var lbracket = layout.lrEnclosure(ltable, "[", "]");
 	ltable.bindExpr(this);
 	lbracket.bindExpr(this, "bracket");
 	return layout.raise(4, lbracket);
@@ -951,6 +983,67 @@ var EditExpr = {
 };
 EditExpr = Expression.specialise(EditExpr);
 
+var Fencing = {
+    __name__: "Fencing",
+    isContainer: true,
+    layout: function (layout) {
+	var lvalue = layout.ofExpr(this.child);
+	var labs = layout.lrEnclosure(lvalue,
+		this.leftFence, this.rightFence);
+	labs.bindExpr(this);
+	return labs;
+    }
+};
+Fencing = OneChildExpression.specialise(Fencing);
+
+var Abs = {
+    __name__: "Abs",
+    leftFence: "|",
+    rightFence: "|"
+};
+Abs = Fencing.specialise(Abs);
+
+var Ceiling = {
+    __name__: "Ceiling",
+    leftFence: "|+",
+    rightFence: "+|"
+};
+Ceiling = Fencing.specialise(Ceiling);
+
+var Floor = {
+    __name__: "Floor",
+    leftFence: "|_",
+    rightFence: "_|"
+};
+Floor = Fencing.specialise(Floor);
+
+var Conjugate = {
+    __name__: "Conjugate",
+    isContainer: true,
+    layout: function(layout) {
+	var lvalue = layout.ofExpr(this.child);
+	var line = layout.hline(null, 1);
+	var vspace = layout.vspace(2);
+	var stack = layout.stack([lvalue, vspace, line], 0);
+	stack.bindExpr(this);
+	line.bindExpr(this, "line");
+	return stack;
+    }
+};
+Conjugate = OneChildExpression.specialise(Conjugate);
+
+var Factorial = {
+    __name__: "Factorial",
+    layout: function (layout) {
+	var lvalue = this.subLayout(layout, this.child);
+	var excl = layout.text("!");
+	var ltrain = layout.train([lvalue, excl]);
+	ltrain.bindExpr(this);
+	return ltrain;
+    }
+};
+Factorial = OneChildExpression.specialise(Factorial);
+
 //
 // Set priorities
 //
@@ -959,15 +1052,20 @@ var priorities = [
     [Number_, 100],
     [Parameter, 100],
     [EditExpr, 100],
-    [Matrix, 7],
     [Bracket, 97],
+    [Factorial, 96],
     [Sqrt, 95],
+    [Abs, 95],
+    [Ceiling, 95],
+    [Floor, 95],
+    [Conjugate, 95],
     [Power, 90],
     [Fraction, 80],
     [Product, 50],
     [TrigFunction, 40],
     [Negation, 20],
     [Sum, 10],
+    [Matrix, 7],
     [Equation, 5]
 ];
 

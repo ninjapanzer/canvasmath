@@ -81,6 +81,12 @@ var operations = {
 	}
 	return e;
     },
+    factorial: function (e) {
+	var p = e.parent;
+	var fac_e = expr.factorial(e.copy());
+	p.replaceChild(e, fac_e);
+	return fac_e;
+    },
     addColumn: function (e, rhs) {
 	rhs = expr.editExpr();
 	if (operations.priorityMode) {
@@ -135,7 +141,8 @@ var prefixUnaryOps = {
 };
 
 var postfixUnaryOps = {
-    ")": operations.closeBracket
+    ")": operations.closeBracket,
+    "!": operations.factorial
 };
 
 var constants = {
@@ -199,11 +206,18 @@ var constants = {
 };
 
 var functions = {
-    sqrt: function (arg) {
-	return expr.sqrt(arg);
-    }
 };
 
+[
+   {name: "sqrt", expr: expr.sqrt},
+   {name: "abs", expr: expr.abs},
+   {name: "ceil", expr: expr.ceiling},
+   {name: "conj", expr: expr.conj},
+   {name: "floor", expr: expr.floor}
+].forEach(function (fdata) {
+    functions[fdata.name] = fdata.expr;
+});
+   
 ["sin", "cos", "tan", "cosec", "sec", "cot"].forEach(function (f) {
     functions[f] = function (arg) {
 	return expr.trigFunction(f, arg);

@@ -26,7 +26,10 @@ var layout = {
 	return LScale.instanciate(elem, scale);
     },
     bracket: function (elem, color) {
-	return LBracket.instanciate(elem, color);
+	return LLREnclosure.instanciate(elem, "(", ")", color);
+    },
+    lrEnclosure: function (elem, left, right, color) {
+	return LLREnclosure.instanciate(elem, left, right, color);
     },
     superscript: function (elem, superscript) {
 	return LSuperscript.instanciate(elem, superscript);
@@ -145,6 +148,42 @@ var LBracket = {
     }
 };
 LBracket = Layout.specialise(LBracket);
+
+var LLREnclosure = {
+    __name__: "LLREnclosure",
+    __init__: function (elem, left, right, color) {
+	this.elem = elem;
+	this.left = left;
+	this.right = right;
+	this.color = color;
+    },
+    box: function () {
+	var box = Stack.instanciate([
+	    VSpace.instanciate(2),
+	    this.elem.box(),
+	    VSpace.instanciate(2)
+	], 1);
+	var left = this.left && getElasticBox(this.left, box);
+	var right = this.right && getElasticBox(this.right, box);
+	if (this.color) {
+	    left = left && ColorBox.instanciate(this.color, left);
+	    right = right && ColorBox.instanciate(this.color, right);
+	}
+	var boxes = left ? [HSpace.instanciate(2), left, HSpace.instanciate(2)] : right;
+	boxes.push(box);
+	if (right) {
+	    boxes.push(HSpace.instanciate(2));
+	    boxes.push(right);
+	    boxes.push(HSpace.instanciate(2));
+	}
+	var train = Train.instanciate(boxes);
+	left && left.bindLayout(this, "left");
+	right && right.bindLayout(this, "right");
+	train.bindLayout(this);
+	return train;
+    }
+};
+LLREnclosure = Layout.specialise(LLREnclosure);
 
 var LSuperscript = {
     __name__: "LSuperscript",

@@ -21,7 +21,7 @@ var mathMLTransformInline = function (tagname) {
 if (!this.preventAutomaticTransform) {
     window.addEventListener('load', function () {
 	mathMLTransformInline();
-    });
+    }, false);
 }
 
 var mathMLParser = {
@@ -54,7 +54,7 @@ var mathMLParser = {
 	}
 	if (func.arity) {
 	    if (args.length !== func.arity) {
-		throw ("Function " + funcName + "expects " +
+		throw ("Function " + funcName + " expects " +
 		       func.arity + " arguments, got " + args.length);
 	    }
 	    return func.apply.apply(func, args);
@@ -90,7 +90,8 @@ var mathMLElements = {
 	'sinh', 'cosh', 'tanh', 'sech', 'csch', 'coth',
 	'arcsin', 'arccos', 'arctan', 'arcsec', 'arccsc', 'arccot',
 	'arcsinh', 'arccosh', 'arctanh', 'arcsech', 'arccsch', 'arccoth',
-	'exp', 'ln', 'log'
+	'exp', 'ln', 'log',
+	'arg'
     ]
 };
 
@@ -110,6 +111,7 @@ mathMLParser.registerFunction("power", 2, function (base, pow) {
     return expr.power(base, pow);
 });
 mathMLParser.registerFunction("minus", null, function (args) {
+    // Minus can be unary or binary.
     if (args.length === 1) {
 	return expr.negation(args[0]);
     } else if (args.length === 2) {
@@ -120,4 +122,16 @@ mathMLParser.registerFunction("minus", null, function (args) {
 });
 mathMLParser.registerFunction("divide", 2, function (num, den) {
     return expr.fraction(num, den);
+});
+mathMLParser.registerFunction("abs", 1, function (val) {
+    return expr.abs(val);
+});
+mathMLParser.registerFunction("conjugate", 1, function (val) {
+    return expr.conjugate(val);
+});
+mathMLParser.registerFunction("factorial", 1, function (val) {
+    return expr.factorial(val);
+});
+mathMLParser.registerFunction("floor", 1, function (val) {
+    return expr.floor(val);
 });

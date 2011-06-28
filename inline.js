@@ -24,6 +24,6 @@ var transformInline = function (tagname) {
 if (!this.preventAutomaticTransform) {
     window.addEventListener("load", function () {
 	transformInline();
-    });
+    }, false);
 }
 

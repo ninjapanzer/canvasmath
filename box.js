@@ -269,12 +269,12 @@ var Paren = {
     },
     calculate: function () {
 	var box = this.box;
-	this.height = box.height + 4;
-	this.ascent = box.ascent + 2;
-	this.descent = box.descent - 2;
-	this.width = 4;
-	this.left = this.reflect ? 3 : 1;
-	this.right = this.reflect ? -2 : 6;
+	this.height = box.height;
+	this.ascent = box.ascent;
+	this.descent = box.descent;
+	this.width = 3;
+	this.left = this.reflect ? 2.5 : 0.5;
+	this.right = this.reflect ? -2.5 : 3.5;
 	this.r = 5;
     },
     drawOnCanvas: function (ctx, x, y) {
@@ -291,6 +291,68 @@ var Paren = {
     }
 };
 Paren = Box.specialise(Paren);
+
+var ElasticVBar = {
+    __name__: "Paren",
+    __init__: function (box, top, bottom, reflect) {
+	this.box = box;
+	this.top = top;
+	this.bottom = bottom;
+	this.reflect = reflect;
+	this.calculate();
+    },
+    calculate: function () {
+	var box = this.box;
+	this.height = box.height;
+	this.ascent = box.ascent;
+	this.descent = box.descent;
+	this.left = 0.5;
+	this.right = this.reflect ? -3.5 : 4.5;
+	this.width = 1;
+    },
+    drawOnCanvas: function (ctx, x, y) {
+	ctx.save();
+	ctx.translate(x, y);
+	ctx.beginPath();
+	if (this.top) {
+	    ctx.moveTo(this.left, -this.ascent);
+	    ctx.lineTo(this.right, -this.ascent);
+	}
+	if (this.bottom) {
+	    ctx.moveTo(this.left, -this.descent);
+	    ctx.lineTo(this.right, -this.descent);
+	}
+	ctx.moveTo(this.left, -this.ascent);
+	ctx.lineTo(this.left, -this.descent);
+	ctx.stroke();
+	ctx.restore();
+    }
+};
+ElasticVBar = Box.specialise(ElasticVBar);
+
+var getElasticBox = function (type, box) {
+    switch (type) {
+    case "(":
+	return Paren.instanciate(box);
+    case ")":
+	return Paren.instanciate(box, true);
+    case "|":
+	return ElasticVBar.instanciate(box);
+    case "[":
+	return ElasticVBar.instanciate(box, true, true);
+    case "]":
+	return ElasticVBar.instanciate(box, true, true, true);
+    case "|+":
+	return ElasticVBar.instanciate(box, true);
+    case "+|":
+	return ElasticVBar.instanciate(box, true, false, true);
+    case "|_":
+	return ElasticVBar.instanciate(box, false, true);
+    case "_|":
+	return ElasticVBar.instanciate(box, false, true, true);
+    }
+    throw "Elasctic box type '" + type + "' unknown";
+};
 
 var HSpace = {
     __name__: "HSpace",
