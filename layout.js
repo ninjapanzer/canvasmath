@@ -55,8 +55,8 @@ var layout = {
     raise: function (height, elem) {
 	return LRaise.instanciate(height, elem);
     },
-    sqrt: function (elem) {
-	return LSqrt.instanciate(elem);
+    sqrt: function (elem, nth) {
+	return LSqrt.instanciate(elem, nth);
     },
     table: function (array, hspace, vspace) {
 	return LTable.instanciate(array, hspace, vspace);
@@ -285,12 +285,14 @@ LFrame = Layout.specialise(LFrame);
 
 var LSqrt = {
     __name__: "LSqrt",
-    __init__: function (elem) {
+    __init__: function (elem, nth) {
 	this.elem = elem;
+	this.nth = nth;
     },
     box: function () {
 	var box = this.elem.box();
-	var rbox = RootSign.instanciate(box);
+	var nthbox = this.nth && this.nth.box();
+	var rbox = RootSign.instanciate(box, nthbox);
 	rbox.bindLayout(this);
 	return rbox;
     }

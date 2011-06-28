@@ -87,6 +87,12 @@ var operations = {
 	p.replaceChild(e, fac_e);
 	return fac_e;
     },
+    nthRoot: function (e) {
+	var p = e.parent;
+	var rhs = expr.editExpr();
+	p.replaceChild(e, expr.sqrt(rhs, e.copy()));
+	return rhs;
+    },
     addColumn: function (e, rhs) {
 	rhs = expr.editExpr();
 	if (operations.priorityMode) {
@@ -129,7 +135,8 @@ var infixBinaryOps = {
     "(": operations.multByBracket,
     "=": operations.equals,
     ",": operations.addColumn,
-    ";": operations.addRow
+    ";": operations.addRow,
+    "root": operations.nthRoot
 };
 
 var prefixUnaryOps = {

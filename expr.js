@@ -35,8 +35,8 @@ var expr = {
     root: function (e) {
 	return RootExpression.instanciate(e);
     },
-    sqrt: function (e) {
-	return Sqrt.instanciate(e);
+    sqrt: function (e, nth) {
+	return Sqrt.instanciate(e, nth);
     },
     abs: function (e) {
 	return Abs.instanciate(e);
@@ -721,23 +721,32 @@ var Sqrt = {
     __name__: "Sqrt",
     isContainer: true,
     isSqrt: true,
-    __init__: function (expr) {
+    __init__: function (expr, nth) {
 	this.expr = expr;
-	expr.setRelations(this, null, null);
+	this.nth = nth;
+	expr.setRelations(this, null, nth);
+	if (nth) {
+	    nth.setRelations(this, expr);
+	}
     },
     layout: function (layout) {
 	var l = layout.ofExpr(this.expr);
-	var lroot = layout.sqrt(l);
+	var lnth = this.nth && layout.scale(layout.ofExpr(this.nth), 0.8);
+	var lroot = layout.sqrt(l, lnth);
 	lroot.bindExpr(this);
 	return lroot;
     },
     copy: function () {
-	return expr.sqrt(this.expr.copy());
+	return expr.sqrt(this.expr.copy(), this.nth && this.nth.copy());
     },
     replaceChild: function (oldChild, newChild) {
 	if (oldChild === this.expr) {
 	    this.expr = newChild;
-	    newChild.setRelations(this, null, null);
+	    newChild.setRelations(this, null, this.nth);
+	    return true;
+	} else if (oldChild === this.nth) {
+	    this.nth = newChild;
+	    newChild.setRelations(this, this.expr, null);
 	    return true;
 	}
 	return false;

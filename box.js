@@ -540,28 +540,40 @@ Frame = Box.specialise(Frame);
 
 var RootSign = {
     __name__: "RootSign",
-    __init__: function (box) {
+    __init__: function (box, nth) {
 	this.box = box;
+	this.nth = nth;
 	this.calculate();
     },
     calculate: function () {
-	this.width = this.box.width + 12;
+	this.nthWidth = this.nth ? this.nth.width : 0;
+	this.nthWidth = Math.max(5, this.nthWidth);
+	this.width = this.box.width + this.nthWidth + 7;
 	this.height = this.box.height + 3;
 	this.ascent = this.box.ascent + 3;
 	this.descent = this.box.descent;
     },
     drawOnCanvas: function (ctx, x, y) {
 	ctx.beginPath();
-	ctx.moveTo(x, y - this.descent - 5);
-	ctx.lineTo(x + 5, y - this.descent - 5);
-	ctx.lineTo(x + 10, y - this.descent);
-	ctx.lineTo(x + 10, y - this.ascent);
-	ctx.lineTo(x + this.width, y - this.ascent);
+	ctx.save();
+	ctx.translate(x + this.nthWidth, y);
+	ctx.moveTo(-5, -this.descent - 5);
+	ctx.lineTo(0, -this.descent - 5);
+	ctx.lineTo(5, -this.descent);
+	ctx.lineTo(5, -this.ascent);
+	ctx.lineTo(this.width - this.nthWidth, -this.ascent);
 	ctx.stroke();
-	this.box.drawOnCanvas(ctx, x + 12, y);
+	this.box.drawOnCanvas(ctx, 7, 0);
+	if (this.nth) {
+	    this.nth.alignOnCanvas(ctx, 0, -this.descent - 5 + this.nth.descent, "right");
+	}
+	ctx.restore();
     },
     pushSubContainers: function (containers, x, y) {
-	this.box.pushContainers(containers, x - 10, y);
+	this.box.pushContainers(containers, x - this.nthWidth - 7, y);
+	if (this.nth) {
+	    this.nth.pushContainers(containers, x - this.nthWidth, y + this.descent + 5 - this.nth.descent, "right");
+	}
     }
 };
 RootSign = Box.specialise(RootSign);
