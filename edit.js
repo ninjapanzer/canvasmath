@@ -462,5 +462,11 @@ var editor = {
 	}
 	var input = e.isEditExpr ? e.content + c : c;
 	return this.interpret(e, input, true);
+    },
+    parse: function (input) {
+	var edit = expr.editExpr();
+	var root = expr.root(edit);
+	this.interpret(edit, input);
+	return root;
     }
 };

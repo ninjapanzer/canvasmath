@@ -61,6 +61,17 @@ var expr = {
     },
     dummy: function () {
 	return expr.integer(0);
+    },
+    drawOnNewCanvas: function (e) {
+	var box = layout.ofExpr(e).box();
+	var canvas = $.make("canvas", {
+	    width: box.width + 2, // +2 is for IE9...
+	    height: box.height,
+	    style: "vertical-align: " + box.descent + "px;"
+	});
+	var ctx = canvas.getContext("2d");
+	box.drawOnCanvas(ctx, 0, box.ascent);
+	return canvas;
     }
 };
 

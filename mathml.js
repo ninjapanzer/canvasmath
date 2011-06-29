@@ -1,19 +1,12 @@
 var mathMLTransformInline = function (tagname) {
     var element, i, text;
-    var edit, root, canvas, box, ctx;
+    var root, canvas;
     var elements = document.getElementsByTagName(tagname || "math");
     initBox();
     for (i = elements.length - 1; i >= 0; i--) {
 	element = elements[i];
 	root = mathMLParser.parse(element.firstElementChild);
-	box = layout.ofExpr(root).box();
-	canvas = $.make("canvas", {
-	    width: box.width + 2, // +2 is for IE9...
-	    height: box.height,
-	    style: "vertical-align: " + box.descent + "px;"
-	});
-	ctx = canvas.getContext("2d");
-	box.drawOnCanvas(ctx, 0, box.ascent);
+	canvas = expr.drawOnNewCanvas(root);
 	element.parentNode.replaceChild(canvas, element);
     }
 };
@@ -47,7 +40,7 @@ var mathMLParser = {
 	    return expr.editExpr();
 	}
     },
-    parseFunc: function (funcName, args) {
+    parseFunc: function (funcName, args, qualifiers) {
 	var func = this.functions[funcName];
 	if (!func) {
 	    throw "unknown function: " + funcName;
@@ -57,31 +50,36 @@ var mathMLParser = {
 		throw ("Function " + funcName + " expects " +
 		       func.arity + " arguments, got " + args.length);
 	    }
+	    args.push(qualifiers);
 	    return func.apply.apply(func, args);
 	} else {
-	    return func.apply.call(func, args);
+	    return func.apply.call(func, args, qualifiers);
 	}
     },
     apply: function (node) {
 	var el = node.firstElementChild;
 	var funcName = el.tagName;
 	var args = [];
+	var qualifiers = {};
+	var arg;
 	el = el.nextElementSibling;
 	while (el) {
-	    args.push(this.parse(el));
+	    arg = this.parse(el);
+	    if (el.isQualifier) {
+		qualifiers[el.name] = el.value;
+	    } else {
+		args.push(this.parse(el));
+	    }
 	    el = el.nextElementSibling;
 	}
-	return this.parseFunc(funcName, args);
-    },
-    sin: function (args) {
-	return expr.trigFunction("sin", args[0]);
+	return this.parseFunc(funcName, args, qualifiers);
     },
     ci: function (el) {
 	return expr.parameter(el.textContent);
     },
     cn: function (el) {
 	return expr.number(el.textContent);
-    }    
+    },
 };
 
 var mathMLElements = {
@@ -92,6 +90,10 @@ var mathMLElements = {
 	'arcsinh', 'arccosh', 'arctanh', 'arcsech', 'arccsch', 'arccoth',
 	'exp', 'ln', 'log',
 	'arg'
+    ],
+    qualifiers: [
+	'bvar', 'lowlimit', 'uplimit', 'interval', 'condition',
+	'domainofapplication', 'degree', 'momentabout', 'logbase'
     ]
 };
 
@@ -99,6 +101,16 @@ mathMLElements.unaryStandardFunctions.forEach(function (fn) {
     mathMLParser.registerFunction(fn, 1, function (arg) {
 	return expr.trigFunction(fn, arg);
     });
+});
+
+mathMLElements.qualifiers.forEach(function (qual) {
+    mathMLParser[qual] = function (el) {
+	return {
+	    isQualifier: true,
+	    name: qual,
+	    value: this.parse(el)
+	};
+    };
 });
 
 mathMLParser.registerFunction("plus", null, function (args) {
