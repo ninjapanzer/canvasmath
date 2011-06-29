@@ -52,7 +52,12 @@ var SimpleSerializer = {
 	return this.serialize(e.num) + "/" + this.serialize(e.den);
     },
     Sqrt: function (e) {
-	return "sqrt" + this.serialize(e.expr, true);
+	if (e.nth) {
+	    return this.serialize(e.nth) + " root " +
+		    this.serialize(e.expr, true);
+	} else {
+	    return "sqrt" + this.serialize(e.expr, true);
+	}
     },
     TrigFunction: function (e) {
 	return e.name + this.serialize(e.arg, true);
@@ -63,6 +68,21 @@ var SimpleSerializer = {
 	    return row.map(function (item) { return self.serialize(item); }).
 		join(", ");
 	}).join("; ") + ")";
+    },
+    Abs: function (e) {
+	return "abs" + this.serialize(e.child, true);
+    },
+    Floor: function (e) {
+	return "floor" + this.serialize(e.child, true);
+    },
+    Ceiling: function (e) {
+	return "ceiling" + this.serialize(e.child, true);
+    },
+    Factorial: function (e) {
+	return this.serialize(e.child) + "!";
+    },
+    Conjugate: function (e) {
+	return "conj" + this.serialize(e.child, true);
     }
 };
 SimpleSerializer = Prototype.specialise(SimpleSerializer);
@@ -349,9 +369,17 @@ var MathMLSerializer = {
 	});
 	return lines.join("\n");
     },
-    apply: function (fn, args) {
+    apply: function (fn, args, quals) {
 	var self = this;
 	var applyArgs = [{tag: fn}];
+	if (quals) {
+	    quals.forEach(function (qual) {
+		applyArgs.push({
+		    tag: qual.name,
+		    children: [self.exprToObject(qual.value)]
+		});
+	    });
+	}
 	args.forEach(function (arg) {
 	    applyArgs.push(self.exprToObject(arg));
 	});
@@ -400,17 +428,39 @@ var MathMLSerializer = {
 	return this.apply("divide", [e.num, e.den]);
     },
     Sqrt: function (e) {
-	return this.apply("sqrt", [e.expr]);
+	var quals = null;
+	if (e.nth) {
+	    quals =[{
+		name: "degree",
+		value: e.nth
+	    }];
+	}
+	return this.apply("root", [e.expr], quals);
     },
     TrigFunction: function (e) {
 	return this.apply(e.name, [e.arg]);
-    }
+    },
     /* XXX Matrix: function (e) {
 	var self = this;
 	return "(" + e.rows.map(function (row) {
 	    return row.map(function (item) { return self.serialize(item); }).
 		join(", ");
 	}).join("; ") + ")";
-    }*/
+    }, */
+    Abs: function (e) {
+	return this.apply("abs", [e.child]);
+    },
+    Floor: function (e) {
+	return this.apply("floor", [e.child]);
+    },
+    Ceiling: function (e) {
+	return this.apply("ceiling", [e.child]);
+    },
+    Factorial: function (e) {
+	return this.apply("factorial", [e.child]);
+    },
+    Conjugate: function (e) {
+	return this.apply("conjugate", [e.child]);
+    }
 };
 MathMLSerializer = Prototype.specialise(MathMLSerializer);

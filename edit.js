@@ -219,7 +219,7 @@ var functions = {
    {name: "sqrt", expr: expr.sqrt},
    {name: "abs", expr: expr.abs},
    {name: "ceil", expr: expr.ceiling},
-   {name: "conj", expr: expr.conj},
+   {name: "conj", expr: expr.conjugate},
    {name: "floor", expr: expr.floor}
 ].forEach(function (fdata) {
     functions[fdata.name] = fdata.expr;

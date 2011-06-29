@@ -65,8 +65,8 @@ var mathMLParser = {
 	el = el.nextElementSibling;
 	while (el) {
 	    arg = this.parse(el);
-	    if (el.isQualifier) {
-		qualifiers[el.name] = el.value;
+	    if (arg.isQualifier) {
+		qualifiers[arg.name] = arg.value;
 	    } else {
 		args.push(this.parse(el));
 	    }
@@ -79,7 +79,7 @@ var mathMLParser = {
     },
     cn: function (el) {
 	return expr.number(el.textContent);
-    },
+    }
 };
 
 var mathMLElements = {
@@ -108,7 +108,7 @@ mathMLElements.qualifiers.forEach(function (qual) {
 	return {
 	    isQualifier: true,
 	    name: qual,
-	    value: this.parse(el)
+	    value: this.parse(el.firstElementChild)
 	};
     };
 });
@@ -125,9 +125,9 @@ mathMLParser.registerFunction("power", 2, function (base, pow) {
 mathMLParser.registerFunction("minus", null, function (args) {
     // Minus can be unary or binary.
     if (args.length === 1) {
-	return expr.negation(args[0]);
+	return expr.neg(args[0]);
     } else if (args.length === 2) {
-	return expr.sum(args[0], expr.negation(args[1]));
+	return expr.sum([args[0], expr.neg(args[1])]);
     } else {
 	throw "minus expects 1 or 2 arguments, got " + args.length;
     }
@@ -146,4 +146,10 @@ mathMLParser.registerFunction("factorial", 1, function (val) {
 });
 mathMLParser.registerFunction("floor", 1, function (val) {
     return expr.floor(val);
+});
+mathMLParser.registerFunction("ceiling", 1, function (val) {
+    return expr.ceiling(val);
+});
+mathMLParser.registerFunction("root", 1, function (val, quals) {
+    return expr.sqrt(val, quals.degree);
 });

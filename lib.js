@@ -201,7 +201,7 @@ $.make = function (name) {
     var i = 1;
     var arg;
     var el = document.createElement(name);
-    if (arguments.length > 1 && typeof arguments[1] === "object") {
+    if (arguments.length > 1 && typeof arguments[1] === "object" && !(arguments[1] instanceof HTMLElement)) {
 	Object.forEachItem(arguments[1], function(attr, val) {
 	    el.setAttribute(attr, val);
 	});
