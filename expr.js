@@ -59,18 +59,21 @@ var expr = {
     matrix: function (array) {
 	return Matrix.instanciate(array);
     },
-    dummy: function () {
+    sum: function (e, from, to) {
+	return Sum.instanciate(e, from, to);
+    },
+    dummyOf: function () {
 	return expr.integer(0);
     },
     drawOnNewCanvas: function (e) {
 	var box = layout.ofExpr(e).box();
 	var canvas = $.make("canvas", {
 	    width: box.width + 2, // +2 is for IE9...
-	    height: box.height,
+	    height: box.height + 1,
 	    style: "vertical-align: " + box.descent + "px;"
 	});
 	var ctx = canvas.getContext("2d");
-	box.drawOnCanvas(ctx, 0, box.ascent);
+	box.drawOnCanvas(ctx, 0.5, box.ascent + 0.5);
 	return canvas;
     }
 };
@@ -1063,6 +1066,47 @@ var Factorial = {
     }
 };
 Factorial = OneChildExpression.specialise(Factorial);
+
+var SumOf = {
+    __name__: "SumOf",
+    __init__: function (arg, from, to) {
+	this.arg = arg;
+	this.from = from;
+	this.to = to;
+	arg.setRelations(this, null, from);
+	if (from) {
+	    from.setRelations(this, arg, to);
+	}
+	if (to) {
+	    to.setRelations(this, from);
+	}
+    },
+    layout: function (layout) {
+    },
+    copy: function () {
+	var carg = arg.copy();
+	var cfrom = this.from && this.from.copy();
+	var cto = this.to && this.to.copy();
+	return this.__proto__.instanciate(carg, cfrom, cto);
+    },
+    replaceChild: function (oldChild, newChild) {
+	if (oldChild === this.arg) {
+	    this.arg = newChild;
+	    newChild.setRelations(this, null, this.from, true);
+	    return true;
+	} else if (oldChild === this.from) {
+	    this.from = newChild;
+	    newChild.setRelations(this, this.arg, this.to, true);
+	    return true;
+	} else if (oldChild === this.to) {
+	    this.to = newChild;
+	    newChild.setRelations(this, this.from, null, true);
+	    return true;
+	}
+	return false;
+    }
+};
+SumOf = Expression.specialise(SumOf);
 
 //
 // Set priorities

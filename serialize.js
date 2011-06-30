@@ -306,7 +306,9 @@ var MathMLSerializer = {
 	    if (!obj.children || obj.children.length === 0) {
 		bits.push({
 		    type: "emptyTag",
-		    text: "<" + obj.tag + "/>"
+		    text: "<" + obj.tag + ">" + "</" + obj.tag + ">"
+		    // innerHTML doesn't like the following:
+		    //  text: "<" + obj.tag + "/>"
 		});
 		return;
 	    }
@@ -398,9 +400,15 @@ var MathMLSerializer = {
 	};
     },
     Parameter: function (p) {
+	var text;
+	if (p.name === p.value) {
+	    text = p.value;
+	} else {
+	    text = "&" + p.name + ";";
+	}
 	return {
 	    tag: "ci",
-	    children: [p.name]
+	    children: [text]
 	};
     },
     Negation: function (e) {

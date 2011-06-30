@@ -18,8 +18,21 @@ window.addEventListener("load", function () {
     tests.forEach(function (test) {
 	var e = editor.parse(test);
 	var mathmlText = MathMLSerializer.serialize(e);
+	console.log(mathmlText);
+	// The following doesn't recognise entities such as &alpha;
+	// (and also I don't know if IE9 supports it)
+	/*
 	var parser = new DOMParser();
 	var mathml = parser.parseFromString(mathmlText, "text/xml").firstChild;
+	*/
+	// So fallback onto innerHTML, which does, but has trouble parsing
+	// empty elements e.g. <plus/>, which is why empty elements are 
+	// serialized as e.g. <plus></plus> :(
+	var parent = $.make("math");
+	parent.innerHTML = mathmlText;
+	var mathml = parent.firstElementChild;
+	
+	console.log(mathml);
 	var parsedMathML = mathMLParser.parse(mathml);
 	var row = $.make("tr",
 	    $.make("td", $.make("pre", test)),

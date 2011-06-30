@@ -225,12 +225,24 @@ var functions = {
     functions[fdata.name] = fdata.expr;
 });
    
-["sin", "cos", "tan", "cosec", "sec", "cot"].forEach(function (f) {
+[
+    "sin", "cos", "tan", "cosec", "sec", "cot",
+    "sinh", "cosh", "tanh", "cosech", "sech", "coth"
+].forEach(function (f) {
     functions[f] = function (arg) {
 	return expr.trigFunction(f, arg);
     };
     functions[f + "^"] = function (arg) {
 	return expr.trigFunction(f, expr.editExpr(), arg);
+    };
+});
+
+[
+    "arcsin", "arccos", "arctan",
+    "arcsinh", "arccosh", "arctanh"
+].forEach(function (f) {
+    functions[f] = function (arg) {
+	return expr.trigFunction(f, arg);
     };
 });
 

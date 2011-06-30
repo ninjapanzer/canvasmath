@@ -273,8 +273,8 @@ var Paren = {
 	this.ascent = box.ascent;
 	this.descent = box.descent;
 	this.width = 3;
-	this.left = this.reflect ? 2.5 : 0.5;
-	this.right = this.reflect ? -2.5 : 3.5;
+	this.left = this.reflect ? 2 : 0;
+	this.right = this.reflect ? -3 : 3;
 	this.r = 5;
     },
     drawOnCanvas: function (ctx, x, y) {
@@ -306,8 +306,8 @@ var ElasticVBar = {
 	this.height = box.height;
 	this.ascent = box.ascent;
 	this.descent = box.descent;
-	this.left = 0.5;
-	this.right = this.reflect ? -3.5 : 4.5;
+	this.left = 0;
+	this.right = this.reflect ? -4 : 4;
 	this.width = 1;
     },
     drawOnCanvas: function (ctx, x, y) {
@@ -456,8 +456,8 @@ var HLine = {
 	this.calculate();
     },
     calculate: function () {
-	this.ascent = this.height*0.5;
-	this.descent = -this.ascent;
+	this.ascent = this.height;
+	this.descent = 0;
     },/* Removed for compatibility with IE9
     get width() {
 	return this._width || (this.stack && this.stack.width) || 0;

@@ -29,12 +29,13 @@ var mathMLParser = {
 	    if (node.firstElementChild) {
 		throw "<" + name + "> should be an empty tag";
 	    }
-	    return expr.Parameter(name);
+	    return expr.parameter(name);
 	};
     },
     parse: function (el) {
-	if (this[el.tagName]) {
-	    var e = this[el.tagName](el);
+	var tag = el.tagName.toLowerCase();
+	if (this[tag]) {
+	    var e = this[tag](el);
 	    return e;
 	} else {
 	    return expr.editExpr();
@@ -58,7 +59,7 @@ var mathMLParser = {
     },
     apply: function (node) {
 	var el = node.firstElementChild;
-	var funcName = el.tagName;
+	var funcName = el.tagName.toLowerCase();
 	var args = [];
 	var qualifiers = {};
 	var arg;
