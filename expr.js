@@ -59,10 +59,10 @@ var expr = {
     matrix: function (array) {
 	return Matrix.instanciate(array);
     },
-    sum: function (e, from, to) {
-	return Sum.instanciate(e, from, to);
+    sumOf: function (e, from, to) {
+	return SumOf.instanciate(e, from, to);
     },
-    dummyOf: function () {
+    dummy: function () {
 	return expr.integer(0);
     },
     drawOnNewCanvas: function (e) {
