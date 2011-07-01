@@ -57,3 +57,15 @@ operators.addSumOperator("minusPlus", "\u2213", "\u2213");
 operators.addInfix("times", operators.simpleOperator("\u00D7", 1));
 
 operators.addInfix("eq", operators.simpleOperator("=", 5));
+
+operators.addPrefix("sum", {
+    layout: function (layout) {
+	return layout.scale(layout.text("\u2211"), 1.5);
+    }
+});
+
+operators.addPrefix("product", {
+    layout: function (layout) {
+	return layout.scale(layout.text("\u220F"), 1.5);
+    }
+});

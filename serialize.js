@@ -469,6 +469,25 @@ var MathMLSerializer = {
     },
     Conjugate: function (e) {
 	return this.apply("conjugate", [e.child]);
+    },
+    OpOf: function (e, opname) {
+	var quals = [];
+	if (e.from) {
+	    if (e.from.isEquation) {
+		quals.push({name: "bvar", value: e.from.operands[0]});
+		quals.push({name: "lowlimit", value: e.from.operands[1]});
+	    }
+	}
+	if (e.to) {
+	    quals.push({name: "uplimit", value: e.to});
+	}
+	return this.apply(opname, [e.arg], quals);
+    },
+    SumOf: function (e) {
+	return this.OpOf(e, "sum");
+    },
+    ProductOf: function (e) {
+	return this.OpOf(e, "product");
     }
 };
 MathMLSerializer = Prototype.specialise(MathMLSerializer);

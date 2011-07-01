@@ -62,6 +62,12 @@ var expr = {
     sumOf: function (e, from, to) {
 	return SumOf.instanciate(e, from, to);
     },
+    productOf: function (e, from, to) {
+	return ProductOf.instanciate(e, from, to);
+    },
+    equation: function (ops) {
+	return Equation.instanciate(ops);
+    },
     dummy: function () {
 	return expr.integer(0);
     },
@@ -577,6 +583,7 @@ Sum = VarLenOperation.specialise(Sum);
 var Equation = {
     __name__: "Equation",
     isProposition: true,
+    isEquation: true,
     pushOp: function (layout, train, i, forceOp) {
 	var op;
 	if (i) {
@@ -1067,8 +1074,9 @@ var Factorial = {
 };
 Factorial = OneChildExpression.specialise(Factorial);
 
-var SumOf = {
-    __name__: "SumOf",
+var OpOf = {
+    __name__: "OpOf",
+    isOpOf: true,
     __init__: function (arg, from, to) {
 	this.arg = arg;
 	this.from = from;
@@ -1082,9 +1090,24 @@ var SumOf = {
 	}
     },
     layout: function (layout) {
+	var stack = [];
+	var i = 0;
+	var lstack, ltrain;
+	if (this.from) {
+	    stack.push(layout.scale(layout.ofExpr(this.from), 0.8));
+	    i = 1;
+	}
+	stack.push(this.operator.layout(layout));
+	if (this.to) {
+	    stack.push(layout.scale(layout.ofExpr(this.to), 0.8));
+	}
+	lstack = layout.stack(stack, i);
+	ltrain = layout.train(lstack, this.subLayout(layout, this.arg));
+	ltrain.bindExpr(this);
+	return ltrain;
     },
     copy: function () {
-	var carg = arg.copy();
+	var carg = this.arg.copy();
 	var cfrom = this.from && this.from.copy();
 	var cto = this.to && this.to.copy();
 	return this.__proto__.instanciate(carg, cfrom, cto);
@@ -1104,9 +1127,31 @@ var SumOf = {
 	    return true;
 	}
 	return false;
+    },
+    setFrom: function (newFrom) {
+	this.from = newFrom;
+	newFrom.setRelations(this, this.arg, this.to);
+    },
+    setTo: function (newTo) {
+	this.to = newTo;
+	newTo.setRelations(this, this.arg, this.to);
     }
 };
-SumOf = Expression.specialise(SumOf);
+OpOf = Expression.specialise(OpOf);
+
+var SumOf = {
+    __name__: "SumOf",
+    isSumOf: true,
+    operator: operators.getPrefix("sum")
+};
+SumOf = OpOf.specialise(SumOf);
+
+var ProductOf = {
+    __name__: "ProductOf",
+    isProductOf: true,
+    operator: operators.getPrefix("product")
+};
+ProductOf = OpOf.specialise(ProductOf);
 
 //
 // Set priorities
@@ -1126,6 +1171,8 @@ var priorities = [
     [Power, 90],
     [Fraction, 80],
     [Product, 50],
+    [SumOf, 40],
+    [ProductOf, 40],
     [TrigFunction, 40],
     [Negation, 20],
     [Sum, 10],

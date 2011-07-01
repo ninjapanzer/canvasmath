@@ -11,7 +11,12 @@ var operations = {
 	    }
 	}
 	// The next two lines are a hack to allow e.g. sin^2x to mean sin^2(x)
-	if (Op === Product && e.parent.isTrigFunction && e.parent.power) {
+	if (Op === Product && e.parent.isTrigFunction && e === e.parent.power) {
+	    e.parent.replaceChild(e.parent.arg, rhs);
+	} else // end of hack XXX
+	// Now a hack to allow sum from(i=1) to (n) (1/n)
+	if (Op === Product && e.parent.isOpOf && 
+		(e === e.parent.to || e === e.parent.from)) {
 	    e.parent.replaceChild(e.parent.arg, rhs);
 	} else // end of hack XXX
 	if (e.__proto__ === Op && !e.isGroup) {
@@ -96,11 +101,11 @@ var operations = {
     addColumn: function (e, rhs) {
 	rhs = expr.editExpr();
 	if (operations.priorityMode) {
-	    while (!e.parent.isRoot && !e.parent.isMatrix && !e.parent.isBracket) {
+	    while (!e.parent.isRoot && !e.parent.insertAfterInRow && !e.parent.isBracket) {
 		e = e.parent;
 	    }
 	}
-	if (e.parent.isMatrix) {
+	if (e.parent.insertAfterInRow) {
 	    e.parent.insertAfterInRow(e, rhs);
 	} else {
 	    e.parent.replaceChild(e, expr.matrix([[e.copy(), rhs]]));
@@ -110,16 +115,47 @@ var operations = {
     addRow: function (e, rhs) {
 	rhs = expr.editExpr();
 	if (operations.priorityMode) {
-	    while (!e.parent.isRoot && !e.parent.isMatrix && !e.parent.isBracket) {
+	    while (!e.parent.isRoot && !e.parent.insertRowAfter && !e.parent.isBracket) {
 		e = e.parent;
 	    }
 	}
-	if (e.parent.isMatrix) {
+	if (e.parent.insertRowAfter) {
 	    e.parent.insertRowAfter(e, [rhs]);
 	} else {
 	    e.parent.replaceChild(e, expr.matrix([[e.copy()], [rhs]]));
 	}
 	return rhs;
+    },
+    fromOp: function(e, rhs) {
+	var target = e;
+	rhs = expr.editExpr();
+	if (operations.priorityMode) {
+	    while (!target.isRoot && !target.setFrom && !target.isBracket) {
+		target = target.parent;
+	    }
+	}
+	if (target.setFrom) {
+	    target.setFrom(rhs);
+	    return rhs;
+	}
+	return e;
+    },
+    toOp: function(e, rhs) {
+	var target = e;
+	rhs = expr.editExpr();
+	if (operations.priorityMode) {
+	    while (!target.isRoot && !target.setTo && !target.isBracket) {
+		target = target.parent;
+	    }
+	}
+	if (target !== e && e.isEditExpr && e.operand) {
+	    e.parent.replaceChild(e, e.operand);
+	}
+	if (target.setTo) {
+	    target.setTo(rhs);
+	    return rhs;
+	}
+	return e;
     }
 };
 
@@ -144,7 +180,9 @@ var prefixUnaryOps = {
     "±": operations.prefixop(expr.plusMinus),
     "+-": operations.prefixop(expr.plusMinus),
     "-+": operations.prefixop(expr.minusPlus),
-    "(": operations.prefixop(expr.brackets)
+    "(": operations.prefixop(expr.brackets),
+    "from": operations.fromOp,
+    "to": operations.toOp
 };
 
 var postfixUnaryOps = {
@@ -220,7 +258,9 @@ var functions = {
    {name: "abs", expr: expr.abs},
    {name: "ceil", expr: expr.ceiling},
    {name: "conj", expr: expr.conjugate},
-   {name: "floor", expr: expr.floor}
+   {name: "floor", expr: expr.floor},
+   {name: "sum", expr: expr.sumOf},
+   {name: "prod", expr: expr.productOf}
 ].forEach(function (fdata) {
     functions[fdata.name] = fdata.expr;
 });

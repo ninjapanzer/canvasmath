@@ -154,3 +154,17 @@ mathMLParser.registerFunction("ceiling", 1, function (val) {
 mathMLParser.registerFunction("root", 1, function (val, quals) {
     return expr.sqrt(val, quals.degree);
 });
+mathMLParser.registerFunction("sum", 1, function (val, quals) {
+    var from;
+    if (quals.bvar && quals.lowlimit) {
+	from = expr.equation([quals.bvar, quals.lowlimit]);
+    }
+    return expr.sumOf(val, from, quals.uplimit);
+});
+mathMLParser.registerFunction("product", 1, function (val, quals) {
+    var from;
+    if (quals.bvar && quals.lowlimit) {
+	from = expr.equation([quals.bvar, quals.lowlimit]);
+    }
+    return expr.productOf(val, from, quals.uplimit);
+});

@@ -10,7 +10,9 @@ var tests = [
     "arcsinx",
     "abs((1+x)/(1-x))",
     "floor(n) + ceil(n^2)",
-    "6!"
+    "6!",
+    "sum from (i=1) to n (1/i)",
+    "product from (k=1) to n (1 - 1/k)"
 ];
 
 window.addEventListener("load", function () {
@@ -18,7 +20,6 @@ window.addEventListener("load", function () {
     tests.forEach(function (test) {
 	var e = editor.parse(test);
 	var mathmlText = MathMLSerializer.serialize(e);
-	console.log(mathmlText);
 	// The following doesn't recognise entities such as &alpha;
 	// (and also I don't know if IE9 supports it)
 	/*
@@ -31,8 +32,6 @@ window.addEventListener("load", function () {
 	var parent = $.make("math");
 	parent.innerHTML = mathmlText;
 	var mathml = parent.firstElementChild;
-	
-	console.log(mathml);
 	var parsedMathML = mathMLParser.parse(mathml);
 	var row = $.make("tr",
 	    $.make("td", $.make("pre", test)),
