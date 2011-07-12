@@ -69,3 +69,12 @@ operators.addPrefix("product", {
 	return layout.scale(layout.text("\u220F"), 1.5);
     }
 });
+
+operators.addPrefix("integral", {
+    layout: function (layout) {
+	return layout.train([
+	    layout.scale(layout.text("\u222B"), 1.5),
+	    layout.hspace(5)
+	]);
+    }
+});

@@ -11,8 +11,12 @@ var tests = [
     "abs((1+x)/(1-x))",
     "floor(n) + ceil(n^2)",
     "6!",
+    "sum xy",
     "sum from (i=1) to n (1/i)",
-    "product from (k=1) to n (1 - 1/k)"
+    "product from (k=1) to n (1 - 1/k)",
+    "integral from 0 to 1 (y differential x)",
+    "integral from 0 to (pi/2) ((sinx) differential x)",
+    "integral fg"
 ];
 
 window.addEventListener("load", function () {

@@ -156,7 +156,7 @@ var operations = {
 	    return rhs;
 	}
 	return e;
-    }
+    },
 };
 
 var infixBinaryOps = {
@@ -181,6 +181,7 @@ var prefixUnaryOps = {
     "+-": operations.prefixop(expr.plusMinus),
     "-+": operations.prefixop(expr.minusPlus),
     "(": operations.prefixop(expr.brackets),
+    "differential": operations.prefixop(expr.differential),
     "from": operations.fromOp,
     "to": operations.toOp
 };
@@ -260,7 +261,8 @@ var functions = {
    {name: "conj", expr: expr.conjugate},
    {name: "floor", expr: expr.floor},
    {name: "sum", expr: expr.sumOf},
-   {name: "prod", expr: expr.productOf}
+   {name: "prod", expr: expr.productOf},
+   {name: "integral", expr: expr.integralOf}
 ].forEach(function (fdata) {
     functions[fdata.name] = fdata.expr;
 });

@@ -65,6 +65,12 @@ var expr = {
     productOf: function (e, from, to) {
 	return ProductOf.instanciate(e, from, to);
     },
+    integralOf: function (e, from, to) {
+	return IntegralOf.instanciate(e, from, to);
+    },
+    differential: function (e) {
+	return Differential.instanciate(e);
+    },
     equation: function (ops) {
 	return Equation.instanciate(ops);
     },
@@ -1153,6 +1159,26 @@ var ProductOf = {
 };
 ProductOf = OpOf.specialise(ProductOf);
 
+var IntegralOf = {
+    __name__: "IntegralOf",
+    isIntegralOf: true,
+    operator: operators.getPrefix("integral")
+};
+IntegralOf = OpOf.specialise(IntegralOf);
+
+var Differential = {
+    __name__: "Differential",
+    isDifferential: true,
+    layout: function (layout) {
+	var ld = layout.text("d");
+	var lvar = this.subLayout(layout, this.child);
+	var l = layout.train([ld, lvar]);
+	l.bindExpr(this);
+	return l;
+    }
+};
+Differential = OneChildExpression.specialise(Differential);
+
 //
 // Set priorities
 //
@@ -1163,6 +1189,7 @@ var priorities = [
     [EditExpr, 100],
     [Bracket, 97],
     [Factorial, 96],
+    [Differential, 96],
     [Sqrt, 95],
     [Abs, 95],
     [Ceiling, 95],
@@ -1173,6 +1200,7 @@ var priorities = [
     [Product, 50],
     [SumOf, 40],
     [ProductOf, 40],
+    [IntegralOf, 40],
     [TrigFunction, 40],
     [Negation, 20],
     [Sum, 10],

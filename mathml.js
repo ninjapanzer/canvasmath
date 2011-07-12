@@ -168,3 +168,9 @@ mathMLParser.registerFunction("product", 1, function (val, quals) {
     }
     return expr.productOf(val, from, quals.uplimit);
 });
+mathMLParser.registerFunction("int", 1, function (val, quals) {
+    if (quals.bvar) {
+	val = expr.product([val, expr.differential(quals.bvar)]);
+    }
+    return expr.integralOf(val, quals.lowlimit, quals.uplimit);
+});

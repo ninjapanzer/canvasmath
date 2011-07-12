@@ -488,6 +488,32 @@ var MathMLSerializer = {
     },
     ProductOf: function (e) {
 	return this.OpOf(e, "product");
+    },
+    IntegralOf: function (e) {
+	var quals = [];
+	var arg = e.arg;
+	var bvar;
+	if (arg.isProduct && arg.lastChild.isDifferential) {
+	    bvar = arg.lastChild.child;
+	    if (arg.operands.length > 2) {
+		arg = expr.product(arg.operands.slice(0, -1));
+	    } else {
+		arg = arg.firstChild;
+	    }
+	} else if (arg.isFraction && arg.num.isDifferential) {
+	    bvar = arg.num;
+	    arg = expr.fraction(expr.number(1), arg.den);
+	}
+	if (bvar) {
+	    quals.push({name: "bvar", value: bvar});
+	}
+	if (e.from) {
+	    quals.push({name: "lowlimit", value: e.from});
+	}
+	if (e.to) {
+	    quals.push({name: "uplimit", value: e.to});
+	}
+	return this.apply("int", [arg], quals);
     }
 };
 MathMLSerializer = Prototype.specialise(MathMLSerializer);
