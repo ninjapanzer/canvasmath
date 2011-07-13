@@ -39,6 +39,15 @@ var SimpleSerializer = {
 	    map(function (op) { return self.serialize(op); }).
 	    join("*");
     },
+    ArgumentList: function (e) {
+	var self = this;
+	return e.operands.
+	    map(function (op) {return self.serialize(op);}).
+	    join(", ");
+    },
+    FunctionApplication: function (e) {
+	return this.serialize(e.func) + "[" + this.serialize(e.arglist) + "]";
+    },
     Equation: function (e) {
 	var self = this;
 	return e.operands.
@@ -373,7 +382,13 @@ var MathMLSerializer = {
     },
     apply: function (fn, args, quals) {
 	var self = this;
-	var applyArgs = [{tag: fn}];
+	var fnObj;
+	if (typeof fn === "string") {
+	    fnObj = {tag: fn};
+	} else {
+	    fnObj = self.exprToObject(fn);
+	}
+	var applyArgs = [fnObj];
 	if (quals) {
 	    quals.forEach(function (qual) {
 		applyArgs.push({
@@ -425,6 +440,11 @@ var MathMLSerializer = {
     },
     Product: function (e) {
 	return this.apply("times", e.operands);
+    },
+    FunctionApplication: function (e) {
+	var f = e.func;
+	var args = e.arglist.operands;
+	return this.apply(f, args);
     },
     Equation: function (e) {
 	return this.apply("eq", e.operands);

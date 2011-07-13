@@ -41,14 +41,10 @@ var mathMLParser = {
 	    return expr.editExpr();
 	}
     },
-    parseFunc: function (funcName, args, qualifiers) {
-	var func = this.functions[funcName];
-	if (!func) {
-	    throw "unknown function: " + funcName;
-	}
+    parseFunc: function (func, args, qualifiers) {
 	if (func.arity) {
 	    if (args.length !== func.arity) {
-		throw ("Function " + funcName + " expects " +
+		throw ("Function " + func.name + " expects " +
 		       func.arity + " arguments, got " + args.length);
 	    }
 	    args.push(qualifiers);
@@ -58,12 +54,12 @@ var mathMLParser = {
 	}
     },
     apply: function (node) {
-	var el = node.firstElementChild;
-	var funcName = el.tagName.toLowerCase();
+	var funcEl = node.firstElementChild;
+	var el = funcEl.nextElementSibling;
 	var args = [];
 	var qualifiers = {};
 	var arg;
-	el = el.nextElementSibling;
+	var func;
 	while (el) {
 	    arg = this.parse(el);
 	    if (arg.isQualifier) {
@@ -73,7 +69,13 @@ var mathMLParser = {
 	    }
 	    el = el.nextElementSibling;
 	}
-	return this.parseFunc(funcName, args, qualifiers);
+	func = this.functions[funcEl.tagName.toLowerCase()];
+	if (!func) {
+	    args = expr.argumentList(args);
+	    func = this.parse(funcEl);
+	    return expr.applyFunction(func, args);
+	}
+	return this.parseFunc(func, args, qualifiers);
     },
     ci: function (el) {
 	return expr.parameter(el.textContent);

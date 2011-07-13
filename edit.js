@@ -40,6 +40,12 @@ var operations = {
 	operations.mult(e, expr.brackets(rhs));
 	return rhs;
     },
+    openArgList: function (e) {
+	var rhs = expr.editExpr();
+	var func = expr.applyFunction(e.copy(), expr.argumentList([rhs]));
+	e.parent.replaceChild(e, func);
+	return rhs;
+    },
     addprefixop: function (maker) {
 	return function (e) {
 	    var rhs = expr.editExpr();
@@ -86,6 +92,15 @@ var operations = {
 	}
 	return e;
     },
+    closeArgList: function (e) {
+	var p;
+	for (p = e.parent; !p.isRoot; p = p.parent) {
+	    if (p.isArgumentList) {
+		return p.parent;
+	    }
+	}
+	return e;
+    },
     factorial: function (e) {
 	var p = e.parent;
 	var fac_e = expr.factorial(e.copy());
@@ -101,10 +116,14 @@ var operations = {
     addColumn: function (e, rhs) {
 	rhs = expr.editExpr();
 	if (operations.priorityMode) {
-	    while (!e.parent.isRoot && !e.parent.insertAfterInRow && !e.parent.isBracket) {
+	    while (!e.parent.isRoot && 
+		   !e.parent.insertAfterInRow && 
+		   !e.parent.isBracket) {
+		console.log(e);
 		e = e.parent;
 	    }
 	}
+	console.log("end", e);
 	if (e.parent.insertAfterInRow) {
 	    e.parent.insertAfterInRow(e, rhs);
 	} else {
@@ -169,6 +188,7 @@ var infixBinaryOps = {
     "/": operations.frac,
     "^": operations.pow,
     "(": operations.multByBracket,
+    "[": operations.openArgList,
     "=": operations.equals,
     ",": operations.addColumn,
     ";": operations.addRow,
@@ -188,6 +208,7 @@ var prefixUnaryOps = {
 
 var postfixUnaryOps = {
     ")": operations.closeBracket,
+    "]": operations.closeArgList,
     "!": operations.factorial
 };
 

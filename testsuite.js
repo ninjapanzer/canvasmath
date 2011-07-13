@@ -16,7 +16,9 @@ var tests = [
     "product from (k=1) to n (1 - 1/k)",
     "integral from 0 to 1 (y differential x)",
     "integral from 0 to (pi/2) ((sinx) differential x)",
-    "integral fg"
+    "integral fg",
+    "f[x]",
+    "(integral f[x] differential x)^2"
 ];
 
 window.addEventListener("load", function () {

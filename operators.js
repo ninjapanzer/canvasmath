@@ -20,14 +20,14 @@ var operators = {
     getPostfix: function (name) {
 	return this.posfix[name];
     },
-    simpleOperator: function (symbol, space) {
-	if (space) {
+    simpleOperator: function (symbol, lspace, rspace) {
+	if (lspace !== undefined) {
 	    return {
 		layout: function (layout) {
 		    return layout.train(
-			layout.hspace(space),
+			layout.hspace(lspace),
 			layout.text(symbol),
-			layout.hspace(space)
+			layout.hspace(rspace == undefined ? lspace : rspace)
 		    );
 		}
 	    };
@@ -58,6 +58,8 @@ operators.addInfix("times", operators.simpleOperator("\u00D7", 1));
 
 operators.addInfix("eq", operators.simpleOperator("=", 5));
 
+operators.addInfix("comma", operators.simpleOperator(",", 0, 3));
+
 operators.addPrefix("sum", {
     layout: function (layout) {
 	return layout.scale(layout.text("\u2211"), 1.5);
@@ -74,7 +76,7 @@ operators.addPrefix("integral", {
     layout: function (layout) {
 	return layout.train([
 	    layout.scale(layout.text("\u222B"), 1.5),
-	    layout.hspace(5)
+		layout.hspace(5)
 	]);
     }
 });

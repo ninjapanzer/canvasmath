@@ -20,6 +20,12 @@ var expr = {
     sum: function (terms) {
 	return Sum.instanciate(terms);
     },
+    argumentList: function (args) {
+	return ArgumentList.instanciate(args);
+    },
+    applyFunction: function (f, arglist) {
+	return FunctionApplication.instanciate(f, arglist);
+    },
     product: function (factors) {
 	return Product.instanciate(factors);
     },
@@ -491,7 +497,7 @@ var VarLenOperation = {
 	var i = this.operands.indexOf(child);
 	if (i === -1) {
 	    return null;
-	} else if (this.operands.length === 2) {
+	} else if (this.operands.length === 2 && !this.oneOperandPossible) {
 	    this.parent.replaceChild(this, this.operands[1 - i]);
 	    return true;
 	} else {
@@ -516,8 +522,10 @@ var VarLenOperation = {
 		this.parent.removeChild(this);
 		return true;
 	    case 1:
-		this.parent.replaceChild(this, operands[i && j - 1]);
-		return true;
+		if (!this.oneOperandPossible) {
+		    this.parent.replaceChild(this, operands[i && j - 1]);
+		    return true;
+		}
 	    default:
 		if (i) {
 		    operands[i - 1].setNextSibling(operands[j]);
@@ -627,6 +635,72 @@ var Product = {
     }
 };
 Product = VarLenOperation.specialise(Product);
+
+var ArgumentList = {
+    __name__: "ArgumentList",
+    isArgumentList: true,
+    oneOperandPossible: true,
+    pushOp: function (layout, train, i, forceOp) {
+	var op;
+	if (i) {
+	    op = operators.infix.comma.layout(layout);
+	    train.push(op);
+	    op.bindExpr(this, i);
+	}
+	train.push(this.subLayout(layout, this.operands[i]));
+    },
+    insertAfterInRow: function (arg, newArg) {
+	return this.insertAfter(arg, newArg);
+    }
+};
+ArgumentList = VarLenOperation.specialise(ArgumentList);
+
+var FunctionApplication = {
+    __name__: "FunctionApplication",
+    isFunctionApplication: true,
+    __init__: function (func, arglist) {
+	this.func = func;
+	this.arglist = arglist;
+	this.func.setRelations(this, null, arglist);
+	this.arglist.setRelations(this, func, null);
+    },
+    copy: function () {
+	return this.__proto__.instanciate(
+	    this.func.copy(),
+	    this.arglist.copy()
+	);
+    },
+    layout: function (layout) {
+	var lfunc = layout.ofExpr(this.func);
+	var largs = layout.bracket(layout.ofExpr(this.arglist), "blue");
+	var ltrain = layout.train([lfunc, largs]);
+	ltrain.bindExpr(this);
+	return ltrain;
+    },
+    replaceChild: function (oldChild, newChild) {
+	if (this.func === oldChild) {
+	    this.func = newChild;
+	    newChild.setRelations(this, null, this.arglist, true);
+	} else if (this.arglist === oldChild) {
+	    throw "arglist replace";
+	    this.arglist = newChild;
+	    newChild.setRelations(this, this.func, null, true);
+	} else {
+	    return false;
+	}
+	return true;
+    },
+    removeChild: function (child) {
+	if (this.base === child) {
+	    return this.parent.replaceChild(this, this.power);
+	} else if (this.power === child) {
+	    return this.parent.replaceChild(this, this.base);
+	} else {
+	    return false;
+	}
+    }
+};
+FunctionApplication = Expression.specialise(FunctionApplication);
 
 var Power = {
     __name__: "Power",
@@ -1188,6 +1262,7 @@ var priorities = [
     [Parameter, 100],
     [EditExpr, 100],
     [Bracket, 97],
+    [FunctionApplication, 96.5],
     [Factorial, 96],
     [Differential, 96],
     [Sqrt, 95],
