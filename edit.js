@@ -107,6 +107,12 @@ var operations = {
 	p.replaceChild(e, fac_e);
 	return fac_e;
     },
+    differentiate: function (e) {
+	var p = e.parent;
+	var diff_e = expr.derivative(e.copy());
+	p.replaceChild(e, diff_e);
+	return diff_e;
+    },
     nthRoot: function (e) {
 	var p = e.parent;
 	var rhs = expr.editExpr();
@@ -175,7 +181,7 @@ var operations = {
 	    return rhs;
 	}
 	return e;
-    },
+    }
 };
 
 var infixBinaryOps = {
@@ -201,7 +207,7 @@ var prefixUnaryOps = {
     "+-": operations.prefixop(expr.plusMinus),
     "-+": operations.prefixop(expr.minusPlus),
     "(": operations.prefixop(expr.brackets),
-    "differential": operations.prefixop(expr.differential),
+    "d.": operations.prefixop(expr.differential),
     "from": operations.fromOp,
     "to": operations.toOp
 };
@@ -209,7 +215,8 @@ var prefixUnaryOps = {
 var postfixUnaryOps = {
     ")": operations.closeBracket,
     "]": operations.closeArgList,
-    "!": operations.factorial
+    "!": operations.factorial,
+    "'": operations.differentiate
 };
 
 var constants = {

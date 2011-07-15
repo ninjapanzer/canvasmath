@@ -534,6 +534,13 @@ var MathMLSerializer = {
 	    quals.push({name: "uplimit", value: e.to});
 	}
 	return this.apply("int", [arg], quals);
+    },
+    Derivative: function (e) {
+	var quals = [];
+	if (e.variable) {
+	    quals.push({name: "bvar", value: e.variable});
+	}
+	return this.apply("diff", [e.expr], quals);
     }
 };
 MathMLSerializer = Prototype.specialise(MathMLSerializer);

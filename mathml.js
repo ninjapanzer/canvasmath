@@ -176,3 +176,6 @@ mathMLParser.registerFunction("int", 1, function (val, quals) {
     }
     return expr.integralOf(val, quals.lowlimit, quals.uplimit);
 });
+mathMLParser.registerFunction("diff", 1, function (val, quals) {
+    return expr.derivative(val, quals.bvar);
+});

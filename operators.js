@@ -18,7 +18,7 @@ var operators = {
 	return this.infix[name];
     },
     getPostfix: function (name) {
-	return this.posfix[name];
+	return this.postfix[name];
     },
     simpleOperator: function (symbol, lspace, rspace) {
 	if (lspace !== undefined) {
@@ -27,7 +27,7 @@ var operators = {
 		    return layout.train(
 			layout.hspace(lspace),
 			layout.text(symbol),
-			layout.hspace(rspace == undefined ? lspace : rspace)
+			layout.hspace(rspace === undefined ? lspace : rspace)
 		    );
 		}
 	    };
@@ -59,6 +59,10 @@ operators.addInfix("times", operators.simpleOperator("\u00D7", 1));
 operators.addInfix("eq", operators.simpleOperator("=", 5));
 
 operators.addInfix("comma", operators.simpleOperator(",", 0, 3));
+
+operators.addPostfix("prime", operators.simpleOperator("\u2032", 2, 0));
+
+operators.addPostfix("factorial", operators.simpleOperator("!"));
 
 operators.addPrefix("sum", {
     layout: function (layout) {

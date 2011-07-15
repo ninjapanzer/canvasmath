@@ -77,6 +77,9 @@ var expr = {
     differential: function (e) {
 	return Differential.instanciate(e);
     },
+    derivative: function (e, v) {
+	return Derivative.instanciate(e, v);
+    },
     equation: function (ops) {
 	return Equation.instanciate(ops);
     },
@@ -237,6 +240,64 @@ var Expression = {
 };
 Expression = Prototype.specialise(Expression);
 
+var FixedChildrenExpression = {
+    __name__: "FixedChildrenExpression",
+    childProperties: [], // This needs to be set
+    optionalProperties: {}, // this needs to be set
+    __init__: function () {
+	var initArgs = arguments;
+	var lastChildIndex = this.childProperties.length - 1;
+	var prev, next;
+	var self = this;
+	this.childProperties.forEach(function (prop, i) {
+	    var arg = initArgs[i];
+	    var next = i < lastChildIndex ? initArgs[i + 1] : undefined;
+	    if (arg) {
+		self[prop] = arg;
+		arg.setRelations(self, prev, next);
+	    }
+	    prev = arg;
+	});
+    },
+    copy: function() {
+	var self = this;
+	var childCopies = this.childProperties.map(function (prop) {
+	    var child = self[prop];
+	    return child && child.copy();
+	});
+	var copy = this.__proto__.specialise();
+	copy.__init__.apply(copy, childCopies);
+	return copy;
+    },
+    replaceChild: function (oldChild, newChild) {
+	var self = this;
+	return this.childProperties.some(function (prop) {
+	    var child = self[prop];
+	    if (child === oldChild) {
+		self[prop] = newChild;
+		newChild.setRelations(self, 
+			child.previousSibling, child.nextSibling, true);
+		return true;
+	    }
+	    return false;
+	});
+    },
+    removeChild: function (child) {
+	console.log(this, child);
+	var self = this;
+	return this.childProperties.some(function (prop) {
+	    if (self[prop] === child) {
+		if (self.optionalProperties[prop]) {
+		    self[prop] = null;
+		    return true;
+		}
+	    }
+	    return false;
+	});
+    }
+};
+FixedChildrenExpression = Expression.specialise(FixedChildrenExpression);
+
 var OneChildExpression = {
     __name__: "OneChildExpression",
     __init__: function (child) {
@@ -253,7 +314,14 @@ var OneChildExpression = {
 	    return true;
 	}
 	return false;
-    }
+    }/*,
+    removeChild: function (child) {
+	if (this.child === child) {
+	    return this.parent.removeChild(this);
+	} else {
+	    return false;
+	}
+    }*/
 };
 OneChildExpression = Expression.specialise(OneChildExpression);
 
@@ -324,11 +392,7 @@ Parameter = Expression.specialise(Parameter);
 
 var PrefixOperation = {
     __name__: "PrefixOperation",
-    isPrefixOperation: true,
-    __init__: function (val) {
-	this.value = val;
-	val.setRelations(this, null, null);
-    },
+    childProperties: ["value"],
     layout: function (layout) {
 	var lneg = layout.text(this.prefixText);
 	var lval = this.subLayout(layout, this.value);
@@ -337,29 +401,11 @@ var PrefixOperation = {
 	ltrain.bindExpr(this);
 	return ltrain;
     },
-    copy: function () {
-	return this.__proto__.instanciate(this.value.copy());
-    },
-    replaceChild: function (oldChild, newChild) {
-	if (oldChild === this.value) {
-	    this.value = newChild;
-	    newChild.setRelations(this, null, null);
-	    return newChild;
-	}
-	return null;
-    },
-    removeChild: function (child) {
-	if (child === this.value) {
-	    return this.parent.removeChild(this);
-	} else {
-	    return null;
-	}
-    },
     getSumExpression: function () {
 	return this.value;
     }
 };
-PrefixOperation = Expression.specialise(PrefixOperation);
+PrefixOperation = FixedChildrenExpression.specialise(PrefixOperation);
 
 var Negation = {
     __name__: "Negation",
@@ -368,7 +414,6 @@ var Negation = {
     sumSeparator: operators.infix.minus
 };
 Negation = PrefixOperation.specialise(Negation);
-
 
 var PlusMinus = {
     __name__: "PlusMinus",
@@ -390,37 +435,16 @@ var Bracket = {
     __name__: "Bracket",
     isBracket: true,
     isContainer: true,
-    __init__: function (expr) {
-	this.expr = expr;
-	expr.setRelations(this, null, null);
-    },
+    childProperties: ["expr"],
     layout: function (layout) {
 	var lbracket;
 	var lexpr = layout.ofExpr(this.expr);
 	lbracket = layout.bracket(lexpr, "red");
 	lbracket.bindExpr(this);
 	return lbracket;
-    },
-    copy: function () {
-	return expr.brackets(this.expr.copy());
-    },
-    replaceChild: function (oldChild, newChild) {
-	if (oldChild === this.expr) {
-	    this.expr = newChild;
-	    newChild.setRelations(this, null, null);
-	    return newChild;
-	}
-	return null;
-    },
-    removeChild: function (child) {
-	if (child === this.expr) {
-	    return this.parent.removeChild(this);
-	} else {
-	    return null;
-	}
     }
 };
-Bracket = Expression.specialise(Bracket);
+Bracket = FixedChildrenExpression.specialise(Bracket);
 
 var VarLenOperation = {
     __name__: "VarLenOperation",
@@ -658,59 +682,21 @@ ArgumentList = VarLenOperation.specialise(ArgumentList);
 var FunctionApplication = {
     __name__: "FunctionApplication",
     isFunctionApplication: true,
-    __init__: function (func, arglist) {
-	this.func = func;
-	this.arglist = arglist;
-	this.func.setRelations(this, null, arglist);
-	this.arglist.setRelations(this, func, null);
-    },
-    copy: function () {
-	return this.__proto__.instanciate(
-	    this.func.copy(),
-	    this.arglist.copy()
-	);
-    },
+    childProperties: ["func", "arglist"],
     layout: function (layout) {
 	var lfunc = layout.ofExpr(this.func);
 	var largs = layout.bracket(layout.ofExpr(this.arglist), "blue");
 	var ltrain = layout.train([lfunc, largs]);
 	ltrain.bindExpr(this);
 	return ltrain;
-    },
-    replaceChild: function (oldChild, newChild) {
-	if (this.func === oldChild) {
-	    this.func = newChild;
-	    newChild.setRelations(this, null, this.arglist, true);
-	} else if (this.arglist === oldChild) {
-	    throw "arglist replace";
-	    this.arglist = newChild;
-	    newChild.setRelations(this, this.func, null, true);
-	} else {
-	    return false;
-	}
-	return true;
-    },
-    removeChild: function (child) {
-	if (this.base === child) {
-	    return this.parent.replaceChild(this, this.power);
-	} else if (this.power === child) {
-	    return this.parent.replaceChild(this, this.base);
-	} else {
-	    return false;
-	}
     }
 };
-FunctionApplication = Expression.specialise(FunctionApplication);
+FunctionApplication = FixedChildrenExpression.specialise(FunctionApplication);
 
 var Power = {
     __name__: "Power",
     isPower: true,
-    __init__: function (base, power) {
-	this.base = base;
-	this.power = power;
-	base.setRelations(this, null, power);
-	power.setRelations(this, base, null);
-    },
+    childProperties: ["base", "power"],
     subLayout: function (layout, subexpr) {
 	// This is to make sure roots and fractions to a power are
 	// surrounded in brackets.
@@ -727,36 +713,9 @@ var Power = {
 	var ls = layout.superscript(bLayout, layout.scale(pLayout, 0.8));
 	ls.bindExpr(this);
 	return ls;
-    },
-    copy: function () {
-	return expr.power(this.base.copy(), this.power.copy());
-    },
-    replaceChild: function (oldChild, newChild) {
-	if (this.base === oldChild) {
-	    this.base = newChild;
-	    newChild.setRelations(this, null, this.power, true);
-	} else if (this.power === oldChild) {
-	    this.power = newChild;
-	    newChild.setRelations(this, this.base, null, true);
-	} else {
-	    return false;
-	}
-	return true;
-    },
-    removeChild: function (child) {
-	if (this.base === child) {
-	    return this.parent.replaceChild(this, this.power);
-	} else if (this.power === child) {
-	    return this.parent.replaceChild(this, this.base);
-	} else {
-	    return false;
-	}
-    }/* Removed for compatibility with IE9
-    get needsFactorSeparator() {
-	return this.base.needsFactorSeparator;
-    }*/
+    }
 };
-Power = Expression.specialise(Power);
+Power = FixedChildrenExpression.specialise(Power);
 Object.defineProperty(Power, "needsFactorSeparator", {
     get: function () {
 	return this.base.needsFactorSeparator;
@@ -767,6 +726,7 @@ var Fraction = {
     __name__: "Fraction",
     isFraction: true,
     isContainer: true,
+    childProperties: ["num", "den"],
     __init__: function (num, den, keepScale) {
 	this.num = num;
 	this.den = den;
@@ -790,33 +750,9 @@ var Fraction = {
 	}
 	return layout.raise(4, stack);
     },
-    copy: function () {
-	return expr.fraction(this.num.copy(), this.den.copy());
-    },
-    replaceChild: function (oldChild, newChild) {
-	if (this.num === oldChild) {
-	    this.num = newChild;
-	    newChild.setRelations(this, null, this.den, true);
-	} else if (this.den === oldChild) {
-	    this.den = newChild;
-	    newChild.setRelations(this, this.num, null, true);
-	} else {
-	    return false;
-	}
-	return true;
-    },
-    removeChild: function (child) {
-	if (this.num === child) {
-	    return this.parent.replaceChild(this, this.den);
-	} else if (this.den === child) {
-	    return this.parent.replaceChild(this, this.num);
-	} else {
-	    return false;
-	}
-    },
     needsFactorSeparator: true
 };
-Fraction = Expression.specialise(Fraction);
+Fraction = FixedChildrenExpression.specialise(Fraction);
 
 var Sqrt = {
     __name__: "Sqrt",
@@ -912,6 +848,16 @@ var TrigFunction = {
 	    return true;
 	}
 	return false;
+    },
+    removeChild: function (child) {
+	if (child === this.arg) {
+	    return this.parent.removeChild(this);
+	} else if (child === this.power) {
+	    this.power = undefined;
+	    return true;
+	} else {
+	    return false;
+	}
     }
 };
 TrigFunction = Expression.specialise(TrigFunction);
@@ -1146,7 +1092,7 @@ var Factorial = {
     __name__: "Factorial",
     layout: function (layout) {
 	var lvalue = this.subLayout(layout, this.child);
-	var excl = layout.text("!");
+	var excl = operators.getPostfix("factorial").layout(layout);
 	var ltrain = layout.train([lvalue, excl]);
 	ltrain.bindExpr(this);
 	return ltrain;
@@ -1157,18 +1103,8 @@ Factorial = OneChildExpression.specialise(Factorial);
 var OpOf = {
     __name__: "OpOf",
     isOpOf: true,
-    __init__: function (arg, from, to) {
-	this.arg = arg;
-	this.from = from;
-	this.to = to;
-	arg.setRelations(this, null, from);
-	if (from) {
-	    from.setRelations(this, arg, to);
-	}
-	if (to) {
-	    to.setRelations(this, from);
-	}
-    },
+    childProperties: ["arg", "from", "to"],
+    optionalProperties: {from: true, to: true},
     layout: function (layout) {
 	var stack = [];
 	var i = 0;
@@ -1186,28 +1122,6 @@ var OpOf = {
 	ltrain.bindExpr(this);
 	return ltrain;
     },
-    copy: function () {
-	var carg = this.arg.copy();
-	var cfrom = this.from && this.from.copy();
-	var cto = this.to && this.to.copy();
-	return this.__proto__.instanciate(carg, cfrom, cto);
-    },
-    replaceChild: function (oldChild, newChild) {
-	if (oldChild === this.arg) {
-	    this.arg = newChild;
-	    newChild.setRelations(this, null, this.from, true);
-	    return true;
-	} else if (oldChild === this.from) {
-	    this.from = newChild;
-	    newChild.setRelations(this, this.arg, this.to, true);
-	    return true;
-	} else if (oldChild === this.to) {
-	    this.to = newChild;
-	    newChild.setRelations(this, this.from, null, true);
-	    return true;
-	}
-	return false;
-    },
     setFrom: function (newFrom) {
 	this.from = newFrom;
 	newFrom.setRelations(this, this.arg, this.to);
@@ -1217,7 +1131,7 @@ var OpOf = {
 	newTo.setRelations(this, this.arg, this.to);
     }
 };
-OpOf = Expression.specialise(OpOf);
+OpOf = FixedChildrenExpression.specialise(OpOf);
 
 var SumOf = {
     __name__: "SumOf",
@@ -1253,6 +1167,34 @@ var Differential = {
 };
 Differential = OneChildExpression.specialise(Differential);
 
+var Derivative = {
+    __name__: "Derivative",
+    isDerivative: true,
+    childProperties: ["expr", "variable"],
+    optionalProperties: {variable: true},
+    layout: function (layout) {
+	var ltrain;
+	if (!this.variable) {
+	    ltrain = layout.train([
+		this.subLayout(layout, this.expr),
+		operators.getPostfix("prime").layout(layout)
+	    ]);
+	    ltrain.bindExpr(this);
+	    return ltrain;
+	} else {
+	    var frac = expr.fraction(
+		expr.text("d"), 
+		expr.differential(this.variable)
+	    );
+	    var diff = expr.applyFunction(frac, this.expr);
+	    var ldiff = layout.ofExpr(diff);
+	    ldiff.bindExpr(this);
+	    return ldiff;
+	}
+    }
+};
+Derivative = FixedChildrenExpression.specialise(Derivative);
+
 //
 // Set priorities
 //
@@ -1263,6 +1205,7 @@ var priorities = [
     [EditExpr, 100],
     [Bracket, 97],
     [FunctionApplication, 96.5],
+    [Derivative, 96.5],
     [Factorial, 96],
     [Differential, 96],
     [Sqrt, 95],
