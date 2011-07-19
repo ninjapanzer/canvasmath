@@ -1175,10 +1175,10 @@ var Derivative = {
     layout: function (layout) {
 	var ltrain;
 	if (!this.variable) {
-	    ltrain = layout.train([
+	    ltrain = layout.superscript(
 		this.subLayout(layout, this.expr),
 		operators.getPostfix("prime").layout(layout)
-	    ]);
+	    );
 	    ltrain.bindExpr(this);
 	    return ltrain;
 	} else {

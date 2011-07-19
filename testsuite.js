@@ -2,9 +2,10 @@ var tests = [
     "1+2*54",
     "-12-3*2",
     "1/2 + 2/3",
-    "sqrt(12)",
-    "3x^5-2x^4+3x-1",
+    "1+ sqrt(12)",
     "(3root2)^2",
+    "sqrt(1/(x+1))",
+    "3x^5-2x^4+3x-1",
     "alpha + beta gamma",
     "sinxcosx + tanx",
     "arcsinx",
@@ -20,7 +21,8 @@ var tests = [
     "f[x, sin t, sqrt3]",
     "(integral f[x] d.x)^2",
     "f'[x+1]",
-    "(f + g)'[t]"
+    "(f + g)'[t]",
+    "(f/g)'"
 ];
 
 window.addEventListener("load", function () {

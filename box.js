@@ -23,12 +23,15 @@ var getTextMetrics = function (text, font) {
     calibrationTxt.appendChild(document.createTextNode(text));
     var baselineFromTop = calibrationImg.offsetTop - calibrationTxt.offsetTop;
     var height = calibrationTxt.offsetHeight;
-    return {
+    var data = {
+	text: text,
+	font: font,
 	width: calibrationTxt.offsetWidth,
 	height: height,
 	ascent: baselineFromTop,
 	descent: baselineFromTop - height
     };
+    return data;
 };
 
 var Box = {
@@ -292,6 +295,60 @@ var Paren = {
 };
 Paren = Box.specialise(Paren);
 
+var Paren2 = {
+    __name__: "Paren",
+    __init__: function (box, reflect) {
+	this.box = box;
+	this.reflect = reflect;
+	this.calculate();
+    },
+    calculate: function () {
+	var box = this.box;
+	this.height = box.height - 4;
+	this.ascent = box.ascent - 2;
+	this.descent = box.descent + 2;
+	this.width = 6;
+	this.bracketWidth = 1.5;
+	this.left = this.reflect ? this.width : 0;
+	this.right = this.reflect ? 0 : this.width;
+	this.middle = this.reflect ? this.width - this.bracketWidth : this.bracketWidth;
+	this.curveHeight = 10;
+    },
+    drawOnCanvas: function (ctx, x, y) {
+	var r = this.r;
+	ctx.save();
+	ctx.translate(x, y);
+	ctx.beginPath();
+	ctx.moveTo(this.right, -this.ascent);
+	ctx.bezierCurveTo(
+	    this.right, -this.ascent,
+	    this.left, -this.ascent,
+	    this.left, -this.ascent + this.curveHeight
+	);
+	ctx.lineTo(this.left, -this.descent - this.curveHeight);
+	ctx.bezierCurveTo(
+	    this.left, -this.descent,
+	    this.right, -this.descent,
+	    this.right, -this.descent
+	);
+	ctx.bezierCurveTo(
+	    this.right, -this.descent,
+	    this.middle, -this.descent,
+	    this.middle, -this.descent - this.curveHeight
+	);
+	ctx.lineTo(this.middle, -this.ascent + this.curveHeight);
+	ctx.bezierCurveTo(
+	    this.middle, -this.ascent,
+	    this.right, -this.ascent,
+	    this.right, -this.ascent
+	);
+	ctx.closePath();
+	ctx.fill();
+	ctx.restore();
+    }
+};
+Paren2 = Box.specialise(Paren2);
+
 var ElasticVBar = {
     __name__: "Paren",
     __init__: function (box, top, bottom, reflect) {
@@ -330,12 +387,38 @@ var ElasticVBar = {
 };
 ElasticVBar = Box.specialise(ElasticVBar);
 
+var ElasticBox = {
+    __name__: "ElasticBox",
+    __init__: function (ref, box) {
+	this.ref = ref;
+	this.box = box;
+	this.calculate();
+    },
+    calculate: function () {
+	var ref = this.ref;
+	this.height = ref.height;
+	this.ascent = ref.ascent;
+	this.descent = ref.descent;
+	var scale = this.height / this.box.height;
+	var scaledBox = Scale.instanciate(this.box, scale);
+	var rise = scaledBox.ascent - this.ascent;
+	this.raisedBox = RaiseBox.instanciate(-rise, scaledBox);
+	this.width = this.raisedBox.width;
+    },
+    drawOnCanvas: function (ctx, x, y) {
+	this.raisedBox.drawOnCanvas(ctx, x, y);
+    }
+};
+ElasticBox = Box.specialise(ElasticBox);
+
 var getElasticBox = function (type, box) {
     switch (type) {
     case "(":
-	return Paren.instanciate(box);
+	return Paren2.instanciate(box);
+	// return ElasticBox.instanciate(box, TextBox.instanciate("(", "20px serif"));
     case ")":
-	return Paren.instanciate(box, true);
+	return Paren2.instanciate(box, true);
+	// return ElasticBox.instanciate(box, TextBox.instanciate(")", "20px serif"));
     case "|":
 	return ElasticVBar.instanciate(box);
     case "[":
@@ -557,15 +640,15 @@ var RootSign = {
 	ctx.beginPath();
 	ctx.save();
 	ctx.translate(x + this.nthWidth, y);
-	ctx.moveTo(-5, -this.descent - 5);
-	ctx.lineTo(0, -this.descent - 5);
-	ctx.lineTo(5, -this.descent);
+	ctx.moveTo(-5, - 5);
+	//ctx.lineTo(0, -this.descent - 5);
+	ctx.lineTo(0, -this.descent);
 	ctx.lineTo(5, -this.ascent);
 	ctx.lineTo(this.width - this.nthWidth, -this.ascent);
 	ctx.stroke();
 	this.box.drawOnCanvas(ctx, 7, 0);
 	if (this.nth) {
-	    this.nth.alignOnCanvas(ctx, 0, -this.descent - 5 + this.nth.descent, "right");
+	    this.nth.alignOnCanvas(ctx, 0, -this.descent - 7 + this.nth.descent, "right");
 	}
 	ctx.restore();
     },
@@ -587,7 +670,7 @@ var RaiseBox = {
     },
     calculate: function () {
 	this.width = this.box.width;
-	this.height = this.box.height + this.raiseHeight;
+	this.height = this.box.height;
 	this.ascent = this.box.ascent + this.raiseHeight;
 	this.descent = this.box.descent + this.raiseHeight;
     },
