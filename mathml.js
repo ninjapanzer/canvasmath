@@ -82,6 +82,25 @@ var mathMLParser = {
     },
     cn: function (el) {
 	return expr.number(el.textContent);
+    },
+    matrixrow: function (node) {
+	var el = node.firstElementChild;
+	var row = [];
+	while (el) {
+	    row.push(this.parse(el));
+	    el = el.nextElementSibling;
+	}
+	return expr.argumentList(row);
+    },
+    matrix: function (node) {
+	var el = node.firstElementChild;
+	var rows = [];
+	while (el) {
+	    var row = this.parse(el);
+	    rows.push(row.operands);
+	    el = el.nextElementSibling;
+	}
+	return expr.matrix(rows);
     }
 };
 

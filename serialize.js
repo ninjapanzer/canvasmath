@@ -555,6 +555,21 @@ var MathMLSerializer = {
 	    quals.push({name: "bvar", value: e.variable});
 	}
 	return this.apply("diff", [e.expr], quals);
+    },
+    Matrix: function (e) {
+	var self = this;
+	var rows = e.rows.map(function (row) {
+	    return {
+		tag: "matrixrow",
+		children: row.map(function (x) {
+		    return self.exprToObject(x);
+		})
+	    };
+	});
+	return {
+	    tag: "matrix",
+	    children: rows
+	};
     }
 };
 MathMLSerializer = Prototype.specialise(MathMLSerializer);

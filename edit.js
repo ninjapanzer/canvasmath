@@ -95,7 +95,7 @@ var operations = {
     closeArgList: function (e) {
 	var p;
 	for (p = e.parent; !p.isRoot; p = p.parent) {
-	    if (p.isArgumentList) {
+	    if (p.insertAfterInRow || p.insertRowAfter) {
 		return p.parent;
 	    }
 	}
@@ -139,11 +139,9 @@ var operations = {
 	    while (!e.parent.isRoot && 
 		   !e.parent.insertAfterInRow && 
 		   !e.parent.isBracket) {
-		console.log(e);
 		e = e.parent;
 	    }
 	}
-	console.log("end", e);
 	if (e.parent.insertAfterInRow) {
 	    e.parent.insertAfterInRow(e, rhs);
 	} else {
