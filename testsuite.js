@@ -22,7 +22,8 @@ var tests = [
     "(integral f[x] d.x)^2",
     "f'[x+1]",
     "(f + g)'[t]",
-    "(f/g)'"
+    "(f/g)'",
+    "d.y/d.x"
 ];
 
 window.addEventListener("load", function () {

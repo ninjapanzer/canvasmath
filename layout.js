@@ -34,6 +34,9 @@ var layout = {
     superscript: function (elem, superscript) {
 	return LSuperscript.instanciate(elem, superscript);
     },
+    topAlign: function (elem, superscript) {
+	return LTopAlign.instanciate(elem, superscript);
+    },
     hspace: function (width) {
 	return LHSpace.instanciate(width);
     },
@@ -201,6 +204,23 @@ var LSuperscript = {
     }
 };
 LSuperscript = Layout.specialise(LSuperscript);
+
+var LTopAlign = {
+    __name__: "LSuperscript",
+    __init__: function (elem, superscript) {
+	this.elem = elem;
+	this.superscript = superscript;
+    },
+    box: function () {
+	var box = this.elem.box();
+	var supbox = this.superscript.box();
+	var superscript = Decoration.instanciate(supbox, box.width, box.ascent - supbox.ascent);
+	var decbox = DecoratedBox.instanciate(box, [superscript]);
+	decbox.bindLayout(this);
+	return decbox;
+    }
+};
+LTopAlign = Layout.specialise(LTopAlign);
 
 var LHSpace = {
     __name__: "LHSpace",

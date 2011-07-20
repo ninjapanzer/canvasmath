@@ -453,6 +453,11 @@ var MathMLSerializer = {
 	return this.apply("power", [e.base, e.power]);
     },
     Fraction: function (e) {
+	var quals;
+	if (e.num.isDifferential && e.den.isDifferential) {
+	    quals = [{name: "bvar", value: e.den.child}];
+	    return this.apply("diff", [e.num.child], quals);
+	}
 	return this.apply("divide", [e.num, e.den]);
     },
     Sqrt: function (e) {

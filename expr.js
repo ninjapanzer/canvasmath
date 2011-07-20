@@ -101,9 +101,11 @@ var expr = {
 
 var Expression = {
     __name__: "Expression",
-    subLayout: function (layout, subexpr) {
+    subLayout: function (layout, subexpr, bracketFlag) {
 	var l = layout.ofExpr(subexpr);
-	if (!subexpr.isContainer && this.priority >= subexpr.priority) {
+	if (bracketFlag === true ||
+	    bracketFlag !== false && 
+	    !subexpr.isContainer && this.priority >= subexpr.priority) {
 	    l = layout.bracket(l);
 	}
 	return l;
@@ -698,11 +700,10 @@ var Power = {
     isPower: true,
     childProperties: ["base", "power"],
     subLayout: function (layout, subexpr) {
-	// This is to make sure roots and fractions to a power are
-	// surrounded in brackets.
+	// This is to make sure roots are surrounded in brackets.
 	// The general rule fails to do this as roots are containers
 	var l = Expression.subLayout.call(this, layout, subexpr);
-	if (subexpr === this.base && (subexpr.isSqrt || subexpr.isFraction)) {
+	if (subexpr === this.base && subexpr.isSqrt) {
 	    l = layout.bracket(l);
 	}
 	return l;
@@ -725,7 +726,6 @@ Object.defineProperty(Power, "needsFactorSeparator", {
 var Fraction = {
     __name__: "Fraction",
     isFraction: true,
-    isContainer: true,
     childProperties: ["num", "den"],
     __init__: function (num, den, keepScale) {
 	this.num = num;
@@ -1175,7 +1175,7 @@ var Derivative = {
     layout: function (layout) {
 	var ltrain;
 	if (!this.variable) {
-	    ltrain = layout.superscript(
+	    ltrain = layout.topAlign(
 		this.subLayout(layout, this.expr),
 		operators.getPostfix("prime").layout(layout)
 	    );
@@ -1183,7 +1183,7 @@ var Derivative = {
 	    return ltrain;
 	} else {
 	    var frac = expr.fraction(
-		expr.text("d"), 
+		expr.parameter("d"), 
 		expr.differential(this.variable)
 	    );
 	    var diff = expr.applyFunction(frac, this.expr);
