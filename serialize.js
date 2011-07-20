@@ -426,6 +426,15 @@ var MathMLSerializer = {
 	    children: [text]
 	};
     },
+    Subscript: function (e) {
+	var args = [e.base];
+	if (e.subscript.isArgumentList) {
+	    args = args.concat(e.subscript.operands);
+	} else {
+	    args.push(e.subscript);
+	}
+	return this.apply("selector", args); 
+    },
     Negation: function (e) {
 	return this.apply("minus", [e.value]);
     },

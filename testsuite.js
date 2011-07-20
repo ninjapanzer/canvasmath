@@ -23,7 +23,9 @@ var tests = [
     "f'[x+1]",
     "(f + g)'[t]",
     "(f/g)'",
-    "d.y/d.x"
+    "d.y/d.x",
+    "x_1+x_2",
+    "(M+N)_[i+1, j-1]"
 ];
 
 window.addEventListener("load", function () {

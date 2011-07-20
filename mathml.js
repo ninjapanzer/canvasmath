@@ -179,3 +179,13 @@ mathMLParser.registerFunction("int", 1, function (val, quals) {
 mathMLParser.registerFunction("diff", 1, function (val, quals) {
     return expr.derivative(val, quals.bvar);
 });
+mathMLParser.registerFunction("selector", null, function (args, quals) {
+    var base = args[0];
+    var sub;
+    if (args.length === 2) {
+	sub = args[1];
+    } else {
+	sub = expr.argumentList(args.slice(1));
+    }
+    return expr.subscript(base, sub);
+});

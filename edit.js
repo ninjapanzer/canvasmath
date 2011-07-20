@@ -119,10 +119,18 @@ var operations = {
 	p.replaceChild(e, expr.sqrt(rhs, e.copy()));
 	return rhs;
     },
-    subscript: function (e) {
+    subscript: function (e, rhs) {
+	var p = e.parent;
+	if (!rhs) {
+	    rhs = expr.editExpr();
+	}
+	p.replaceChild(e, expr.subscript(e.copy(), rhs));
+	return rhs;
+    },
+    subscriptList: function (e) {
 	var p = e.parent;
 	var rhs = expr.editExpr();
-	p.replaceChild(e, expr.subscript(e.copy(), rhs));
+	operations.subscript(e, expr.argumentList([rhs]));
 	return rhs;
     },
     addColumn: function (e, rhs) {
@@ -205,7 +213,8 @@ var infixBinaryOps = {
     ",": operations.addColumn,
     ";": operations.addRow,
     "root": operations.nthRoot,
-    "_": operations.subscript
+    "_": operations.subscript,
+    "_[": operations.subscriptList
 };
 
 var prefixUnaryOps = {
