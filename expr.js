@@ -5,6 +5,9 @@ var expr = {
     parameter: function (name, value) {
 	return Parameter.instanciate(name, value);
     },
+    subscript: function (base, subscript) {
+	return Subscript.instanciate(base, subscript);
+    },
     neg: function (x) {
 	return Negation.instanciate(x);
     },
@@ -391,6 +394,21 @@ var Parameter = {
     }
 };
 Parameter = Expression.specialise(Parameter);
+
+var Subscript = {
+    __name__: "Subscript",
+    childProperties: ["base", "subscript"],
+    layout: function (layout) {
+	var l = layout.subscript(
+	    this.subLayout(layout, this.base),
+	    layout.scale(layout.ofExpr(this.subscript), 0.8)
+	);
+	l.bindExpr(this);
+	return l;
+    }
+};
+Subscript = FixedChildrenExpression.specialise(Subscript);
+
 
 var PrefixOperation = {
     __name__: "PrefixOperation",
@@ -1204,6 +1222,7 @@ var priorities = [
     [Parameter, 100],
     [EditExpr, 100],
     [Bracket, 97],
+    [Subscript, 96.5],
     [FunctionApplication, 96.5],
     [Derivative, 96.5],
     [Factorial, 96],
