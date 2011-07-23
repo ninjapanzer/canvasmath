@@ -699,6 +699,34 @@ var ArgumentList = {
 };
 ArgumentList = VarLenOperation.specialise(ArgumentList);
 
+var Conjunction = {
+    __name__: "Conjunction",
+    pushOp: function (layout, train, i, forceOp) {
+	var op;
+	if (i) {
+	    op = operators.infix.and.layout(layout);
+	    train.push(op);
+	    op.bindExpr(this, i);
+	}
+	train.push(this.subLayout(layout, this.operands[i]));
+    }	
+};
+Conjunction = VarLenOperation.specialise(Conjunction);
+
+var Disjunction = {
+    __name__: "Disjunction",
+    pushOp: function (layout, train, i, forceOp) {
+	var op;
+	if (i) {
+	    op = operators.infix.or.layout(layout);
+	    train.push(op);
+	    op.bindExpr(this, i);
+	}
+	train.push(this.subLayout(layout, this.operands[i]));
+    }	
+};
+Disjunction = VarLenOperation.specialise(Disjunction);
+
 var FunctionApplication = {
     __name__: "FunctionApplication",
     isFunctionApplication: true,
@@ -1242,7 +1270,9 @@ var priorities = [
     [Negation, 20],
     [Sum, 10],
     [Matrix, 7],
-    [Equation, 5]
+    [Equation, 5],
+    [Conjunction, 4],
+    [Disjunction, 3]
 ];
 
 priorities.forEach(function (pl) {

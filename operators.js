@@ -60,6 +60,9 @@ operators.addInfix("eq", operators.simpleOperator("=", 5));
 
 operators.addInfix("comma", operators.simpleOperator(",", 0, 3));
 
+operators.addInfix("and", operators.simpleOperator("\u2227", 5));
+operators.addInfix("or", operators.simpleOperator("\u2228", 5));
+
 operators.addPostfix("prime", operators.simpleOperator("\u2032", 2, 0));
 
 operators.addPostfix("factorial", operators.simpleOperator("!"));

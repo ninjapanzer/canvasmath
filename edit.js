@@ -35,6 +35,12 @@ var operations = {
     equals: function (e, rhs) {
 	return operations.binop(Equation, e, rhs);
     },
+    and: function (e, rhs) {
+	return operations.binop(Conjunction, e, rhs);
+    },
+    or: function (e, rhs) {
+	return operations.binop(Disjunction, e, rhs);
+    },
     multByBracket: function (e) {
 	var rhs = expr.editExpr();
 	operations.mult(e, expr.brackets(rhs));
@@ -212,7 +218,9 @@ var infixBinaryOps = {
     ";": operations.addRow,
     "root": operations.nthRoot,
     "_": operations.subscript,
-    "_[": operations.subscriptList
+    "_[": operations.subscriptList,
+    "and": operations.and,
+    "or": operations.or
 };
 
 var prefixUnaryOps = {

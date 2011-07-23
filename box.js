@@ -296,7 +296,7 @@ var Paren = {
 Paren = Box.specialise(Paren);
 
 var Paren2 = {
-    __name__: "Paren",
+    __name__: "Paren2",
     __init__: function (box, reflect) {
 	this.box = box;
 	this.reflect = reflect;
@@ -348,6 +348,92 @@ var Paren2 = {
     }
 };
 Paren2 = Box.specialise(Paren2);
+
+var CurlyBracket = {
+    __name__: "CurlyBracket",
+    __init__: function (box, reflect) {
+	this.box = box;
+	this.reflect = reflect;
+	this.calculate();
+    },
+    calculate: function () {
+	var box = this.box;
+	this.height = box.height - 4;
+	this.ascent = box.ascent - 2;
+	this.descent = box.descent + 2;
+	this.width = 12;
+	this.bracketWidth = 1.5;
+    },
+    drawOnCanvas: function (ctx, x, y) {
+	var middle = this.width / 2;
+	var midleft = middle - this.bracketWidth / 2;
+	var midright = middle + this.bracketWidth / 2;
+	var left = 0;
+	var right = this.width;
+	if (this.reflect) {
+	    var tmp = midright;
+	    midright = midleft;
+	    midleft = tmp;
+	    tmp = right;
+	    right = left;
+	    left = tmp;
+	}
+	var midy = -0.5*(this.ascent + this.descent);
+	var top = -this.ascent;
+	var bottom = -this.descent;
+	var midtop = top + this.height/4;
+	var midbottom = bottom - this.height/4;
+	ctx.save();
+	ctx.translate(x, y);
+	ctx.beginPath();
+	ctx.moveTo(right, top);
+	ctx.bezierCurveTo(
+	    midleft, top,
+	    midleft, top,
+	    midleft, midtop
+	);
+	ctx.bezierCurveTo(
+	    midleft, midy,
+	    midleft, midy,
+	    left, midy
+	);
+	ctx.bezierCurveTo(
+	    midleft, midy,
+	    midleft, midy,
+	    midleft, midbottom
+	);
+	ctx.bezierCurveTo(
+	    midleft, bottom,
+	    midleft, bottom,
+	    right, bottom
+	);
+	ctx.bezierCurveTo(
+	    midright, bottom,
+	    midright, bottom,
+	    midright, midbottom
+	);
+	ctx.bezierCurveTo(
+	    midright, midy,
+	    midright, midy,
+	    left, midy
+	);
+	ctx.bezierCurveTo(
+	    midright, midy,
+	    midright, midy,
+	    midright, midtop
+	);
+	ctx.bezierCurveTo(
+	    midright, top,
+	    midright, top,
+	    right, top
+	);
+	ctx.closePath();
+	ctx.fill();
+	//ctx.stroke();
+	ctx.restore();
+    }
+};
+CurlyBracket = Box.specialise(CurlyBracket);
 
 var ElasticVBar = {
     __name__: "Paren",
@@ -415,10 +501,12 @@ var getElasticBox = function (type, box) {
     switch (type) {
     case "(":
 	return Paren2.instanciate(box);
-	// return ElasticBox.instanciate(box, TextBox.instanciate("(", "20px serif"));
     case ")":
 	return Paren2.instanciate(box, true);
-	// return ElasticBox.instanciate(box, TextBox.instanciate(")", "20px serif"));
+    case "{":
+	return CurlyBracket.instanciate(box);
+    case "}":
+	return CurlyBracket.instanciate(box, true);
     case "|":
 	return ElasticVBar.instanciate(box);
     case "[":
