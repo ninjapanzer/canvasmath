@@ -468,8 +468,17 @@ Bracket = FixedChildrenExpression.specialise(Bracket);
 
 var VarLenOperation = {
     __name__: "VarLenOperation",
-    __init__: function (operands) {
+    isVarLenOperation: true,
+    __init__: function () {
 	var self = this;
+	var i;
+	var operands = arguments[0];
+	if (arguments.length !== 1 || !operands instanceof Array) {
+	    operands = [];
+	    for (i = 0; i < arguments.length; i++) {
+		operands.push(arguments[i]);
+	    }
+	}
 	this.operands = operands;
 	operands.forEach(function (t, i) {
 	    t.setRelations(self, operands[i - 1], operands[i + 1]);
@@ -701,6 +710,7 @@ ArgumentList = VarLenOperation.specialise(ArgumentList);
 
 var Conjunction = {
     __name__: "Conjunction",
+    isConjunction: true,
     pushOp: function (layout, train, i, forceOp) {
 	var op;
 	if (i) {
@@ -715,6 +725,7 @@ Conjunction = VarLenOperation.specialise(Conjunction);
 
 var Disjunction = {
     __name__: "Disjunction",
+    isDisjunction: true,
     pushOp: function (layout, train, i, forceOp) {
 	var op;
 	if (i) {
@@ -726,6 +737,54 @@ var Disjunction = {
     }	
 };
 Disjunction = VarLenOperation.specialise(Disjunction);
+
+var ConditionalExpression = {
+    __name__: "ConditionalExpression",
+    isConditionalExpression: true,
+    childProperties: ["expr", "condition"],
+    layout: function (layout) {
+	var lexpr = this.subLayout(layout, this.expr);
+	var lop = operators.infix.comma.layout(layout);
+	var lcond = this.subLayout(layout, this.condition);
+	var ltrain = layout.train([lexpr, lop, lcond]);
+	ltrain.bindExpr(this);
+	return ltrain;
+    }
+};
+ConditionalExpression = FixedChildrenExpression.specialise(ConditionalExpression);
+
+var Piecewise = {
+    __name__: "Piecewise",
+    isPiecewise: true,
+    layout: function (layout) {
+	var rows = this.operands.map(function (piece) {
+	    if (piece.isConditionalExpression) {
+		return [layout.ofExpr(piece.expr), layout.ofExpr(piece.condition)];
+	    } else {
+		return [layout.ofExpr(piece)];
+	    }
+	});
+	var lrows = layout.table(rows, 10, 2, "ll");
+	var lbr = layout.lrEnclosure(lrows, "{", null);
+	var l = layout.raise(4, lbr);
+	l.bindExpr(this);
+	return l;
+    }
+};
+Piecewise = VarLenOperation.specialise(Piecewise);
+
+var Parametric = {
+    __name__: "Parametric",
+    isParametric: true,
+    __init__: function (equations, domain) {
+	this.equations = equations;
+    },
+    layout: function (layout) {
+	var leqs = layout.stack(this.equations.operands);
+	var lbr = layout.lrEnclosure(leqs, null, "}");
+	var ldom = layout.ofExpr(this.domain);
+    }
+};
 
 var FunctionApplication = {
     __name__: "FunctionApplication",
@@ -1271,6 +1330,8 @@ var priorities = [
     [Sum, 10],
     [Matrix, 7],
     [Equation, 5],
+    [ConditionalExpression, 4.5],
+    [Piecewise, 4.2],
     [Conjunction, 4],
     [Disjunction, 3]
 ];

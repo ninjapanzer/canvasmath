@@ -22,7 +22,7 @@ var operations = {
 	if (e.__proto__ === Op && !e.isGroup) {
 	    e.insertAfter(e.lastChild, rhs);
 	} else {
-	    e.parent.replaceChild(e, Op.instanciate([e.copy(), rhs]));
+	    e.parent.replaceChild(e, Op.instanciate(e.copy(), rhs));
 	}
 	return rhs;
     },
@@ -41,6 +41,12 @@ var operations = {
     or: function (e, rhs) {
 	return operations.binop(Disjunction, e, rhs);
     },
+    conditional: function (e, rhs) {
+	return operations.binop(ConditionalExpression, e, rhs);
+    },
+    piecewise: function (e, rhs) {
+	return operations.binop(Piecewise, e, rhs);
+    },
     multByBracket: function (e) {
 	var rhs = expr.editExpr();
 	operations.mult(e, expr.brackets(rhs));
@@ -57,7 +63,7 @@ var operations = {
 	    var rhs = expr.editExpr();
 	    operations.add(e, maker(rhs));
 	    return rhs;
-	}
+	};
     },
     pow: function (e) {
 	var p = e.parent;
@@ -220,7 +226,9 @@ var infixBinaryOps = {
     "_": operations.subscript,
     "_[": operations.subscriptList,
     "and": operations.and,
-    "or": operations.or
+    "or": operations.or,
+    "if": operations.conditional,
+    "else": operations.piecewise
 };
 
 var prefixUnaryOps = {

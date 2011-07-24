@@ -776,7 +776,7 @@ RaiseBox = Box.specialise(RaiseBox);
 
 var Table = {
     __name__: "Table",
-    __init__: function (array, hspace, vspace) {
+    __init__: function (array, hspace, vspace, align) {
 	this.rows = array;
 	this.nrows = this.rows.length;
 	this.ncols = this.rows.reduce(function (m, r) {
@@ -784,6 +784,7 @@ var Table = {
 	}, 0);
 	this.hspace = hspace || 0;
 	this.vspace = vspace || 0;
+	this.align = align || "";
 	this.calculate();
     },
     calculate: function () {
@@ -826,9 +827,21 @@ var Table = {
 	y -= this.ascent;
 	this.rows.forEach(function (row, i) {
 	    y += self.ascents[i];
-	    dx = 0;
+	    dx = x;
 	    row.forEach(function (box, j) {
-		box.alignOnCanvas(ctx, x + dx + self.widths[j]/2, y, "center");
+		switch (self.align.charAt(j)) {
+		case "l":
+		    box.alignOnCanvas(ctx, dx, y, "left");
+		    break;
+		case "r":
+		    box.alignOnCanvas(ctx, dx + self.widths[j], y, "right");
+		case "c":
+		case "":
+		    box.alignOnCanvas(ctx, dx + self.widths[j]/2, y, "center");
+		    break;
+		default:
+		    throw "Invalid align code: " + self.align.charAt(j);
+		}
 		dx += self.widths[j] + self.hspace;
 	    });
 	    y += self.vspace - self.descents[i];
@@ -842,6 +855,7 @@ var Table = {
 	    y -= self.ascents[i];
 	    dx = 0;
 	    row.forEach(function (box, j) {
+		// XXX TODO: switch statement as above
 		box.pushContainers(containers, x - dx - self.widths[j]/2, y, "center");
 		dx += self.widths[j] + self.hspace;
 	    });

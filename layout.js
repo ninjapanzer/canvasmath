@@ -64,8 +64,8 @@ var layout = {
     sqrt: function (elem, nth) {
 	return LSqrt.instanciate(elem, nth);
     },
-    table: function (array, hspace, vspace) {
-	return LTable.instanciate(array, hspace, vspace);
+    table: function (array, hspace, vspace, align) {
+	return LTable.instanciate(array, hspace, vspace, align);
     }
 };
 
@@ -356,10 +356,11 @@ LRaise = Layout.specialise(LRaise);
 
 var LTable = {
     __name__: "LTable",
-    __init__: function (array, hspace, vspace) {
+    __init__: function (array, hspace, vspace, align) {
 	this.rows = array;
 	this.hspace = hspace;
 	this.vspace = vspace;
+	this.align = align;
     },
     box: function () {
 	var brows = this.rows.map(function (row) {
@@ -367,7 +368,8 @@ var LTable = {
 		return elem.box();
 	    });
 	});
-	var tbox = Table.instanciate(brows, this.hspace, this.vspace);
+	var tbox = Table.instanciate(brows, this.hspace, 
+	    this.vspace, this.align);
 	return tbox;
     }
 };
