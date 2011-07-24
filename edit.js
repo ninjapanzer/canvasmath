@@ -32,8 +32,15 @@ var operations = {
     mult: function (e, rhs) {
 	return operations.binop(Product, e, rhs);
     },
-    equals: function (e, rhs) {
-	return operations.binop(Equation, e, rhs);
+    addRelation: function (rel) {
+	return function (e, rhs) {
+	    if (!rhs) {
+		rhs = expr.editExpr();
+	    }
+	    var relRhs = ExprWithRelation.instanciate(rhs, rel);
+	    operations.binop(Equation, e, relRhs);
+	    return rhs;
+	};
     },
     and: function (e, rhs) {
 	return operations.binop(Conjunction, e, rhs);
@@ -219,7 +226,11 @@ var infixBinaryOps = {
     "^": operations.pow,
     "(": operations.multByBracket,
     "[": operations.openArgList,
-    "=": operations.equals,
+    "=": operations.addRelation('eq'),
+    "<": operations.addRelation('lt'),
+    ">": operations.addRelation('gt'),
+    "<=": operations.addRelation('leq'),
+    ">=": operations.addRelation('geq'),
     ",": operations.addColumn,
     ";": operations.addRow,
     "root": operations.nthRoot,

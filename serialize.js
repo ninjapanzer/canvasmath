@@ -455,8 +455,41 @@ var MathMLSerializer = {
 	var args = e.arglist.operands;
 	return this.apply(f, args);
     },
+    Conjunction: function (e) {
+	return this.apply("and", e.operands);
+    },
+    Disjunction: function (e) {
+	return this.apply("or", e.operands);
+    },
     Equation: function (e) {
-	return this.apply("eq", e.operands);
+	var self = this;
+	var relations = [];
+	var group, rel, lastExpr;
+	e.operands.forEach(function (operand, i) {
+	    if (i === 0) {
+		lastExpr = operand;
+	    } else if (operand.relation === rel) {
+		group.push(operand.child);
+		lastExpr = operand.child;
+	    } else {
+		if (group) {
+		    relations.push(self.apply(rel, group));
+		}
+		group = [lastExpr, operand.child];
+		rel = operand.relation;
+		lastExpr = operand.child;
+	    }
+	});
+	relations.push(this.apply(rel, group));
+	if (relations.length === 1) {
+	    return relations[0];
+	} else {
+	    relations.unshift({tag: 'and'});
+	    return {
+		tag: "apply",
+		children: relations
+	    };
+	}
     },
     Power: function (e) {
 	return this.apply("power", [e.base, e.power]);
@@ -508,8 +541,10 @@ var MathMLSerializer = {
 	var quals = [];
 	if (e.from) {
 	    if (e.from.isEquation) {
+		// XXX Not good: it is assumed below that the equation is
+		// of the form e.g. i=0
 		quals.push({name: "bvar", value: e.from.operands[0]});
-		quals.push({name: "lowlimit", value: e.from.operands[1]});
+		quals.push({name: "lowlimit", value: e.from.operands[1].child});
 	    }
 	}
 	if (e.to) {

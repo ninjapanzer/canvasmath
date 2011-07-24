@@ -208,3 +208,9 @@ mathMLParser.registerFunction("selector", null, function (args, quals) {
     }
     return expr.subscript(base, sub);
 });
+mathMLParser.registerFunction("and", null, function (args) {
+    return expr.conjunction(args);
+});
+mathMLParser.registerFunction("or", null, function (args) {
+    return expr.disjunction(args);
+});

@@ -32,6 +32,12 @@ var expr = {
     product: function (factors) {
 	return Product.instanciate(factors);
     },
+    conjunction: function (props) {
+	return Conjunction.instanciate(props);
+    },
+    disjunction: function (props) {
+	return Disjunction.instanciate(props);
+    },
     power: function (x, y) {
 	return Power.instanciate(x, y);
     },
@@ -288,7 +294,6 @@ var FixedChildrenExpression = {
 	});
     },
     removeChild: function (child) {
-	console.log(this, child);
 	var self = this;
 	return this.childProperties.some(function (prop) {
 	    if (self[prop] === child) {
@@ -306,11 +311,28 @@ FixedChildrenExpression = Expression.specialise(FixedChildrenExpression);
 var OneChildExpression = {
     __name__: "OneChildExpression",
     __init__: function (child) {
+	var initArgs = arguments;
+	var self = this;
 	this.child = child;
 	child.setRelations(this);
+	if (this.extraProperties) {
+	    this.extraProperties.forEach(function (prop, i) {
+		self[prop] = initArgs[i + 1];
+	    });
+	}
     },
     copy: function () {
-	return this.__proto__.instanciate(this.child.copy());
+	var initArgs, self;
+	if (!this.extraProperties) {
+	    return this.__proto__.instanciate(this.child.copy());
+	} else {
+	    self = this;
+	    initArgs = [this.child.copy()];
+	    this.extraProperties.forEach(function (prop) {
+		initArgs.push(self[prop]);
+	    });
+	    return this.__proto__.instanciate.apply(this.__proto__, initArgs);
+	};
     },
     replaceChild: function (oldChild, newChild) {
 	if (this.child === oldChild) {
@@ -647,18 +669,33 @@ var Sum = {
 };
 Sum = VarLenOperation.specialise(Sum);
 
+var ExprWithRelation = {
+    __name__: "ExprWithRelation",
+    isExprWithRelation: true,
+    extraProperties: ['relation']
+};
+ExprWithRelation = OneChildExpression.specialise(ExprWithRelation);
+
 var Equation = {
     __name__: "Equation",
     isProposition: true,
     isEquation: true,
     pushOp: function (layout, train, i, forceOp) {
 	var op;
+	var operand = this.operands[i];
+	var relation;
 	if (i) {
-	    op = operators.infix.eq.layout(layout);
+	    if (operand.isExprWithRelation) {
+		relation = operand.relation;
+		operand = operand.child;
+	    } else {
+		relation = 'eq';
+	    }
+	    op = operators.infix[relation].layout(layout);
 	    train.push(op);
-	    op.bindExpr(this, i);
+	    op.bindExpr(operand);
 	}
-	train.push(this.subLayout(layout, this.operands[i]));
+	train.push(this.subLayout(layout, operand));
     }
 };
 Equation = VarLenOperation.specialise(Equation);
@@ -756,12 +793,13 @@ ConditionalExpression = FixedChildrenExpression.specialise(ConditionalExpression
 var Piecewise = {
     __name__: "Piecewise",
     isPiecewise: true,
+    isContainer: true,
     layout: function (layout) {
 	var rows = this.operands.map(function (piece) {
 	    if (piece.isConditionalExpression) {
 		return [layout.ofExpr(piece.expr), layout.ofExpr(piece.condition)];
 	    } else {
-		return [layout.ofExpr(piece)];
+		return [layout.ofExpr(piece), layout.text("otherwise")];
 	    }
 	});
 	var lrows = layout.table(rows, 10, 2, "ll");
@@ -1329,6 +1367,7 @@ var priorities = [
     [Negation, 20],
     [Sum, 10],
     [Matrix, 7],
+    [ExprWithRelation, 5.1],
     [Equation, 5],
     [ConditionalExpression, 4.5],
     [Piecewise, 4.2],
