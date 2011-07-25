@@ -27,7 +27,7 @@ var tests = [
     "x_1+x_2",
     "(M+N)_[i+1, j-1]",
     "(a, b; c, d)",
-    "p or q",
+    "p or not q",
     "p and q and r",
     "x<y<z",
     "f[x] = (2x-1 if 0 <= x <= 1 else x if 1 < x <=4 else 0)"

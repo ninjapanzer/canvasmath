@@ -66,6 +66,7 @@ operators.addInfix("comma", operators.simpleOperator(",", 0, 3));
 
 operators.addInfix("and", operators.simpleOperator("\u2227", 5));
 operators.addInfix("or", operators.simpleOperator("\u2228", 5));
+operators.addPrefix("not", operators.simpleOperator("\u00ac"));
 
 operators.addPostfix("prime", operators.simpleOperator("\u2032", 2, 0));
 

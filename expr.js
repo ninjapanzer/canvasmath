@@ -17,6 +17,9 @@ var expr = {
     minusPlus: function (x) {
 	return MinusPlus.instanciate(x);
     },
+    not: function (x) {
+	return Not.instanciate(x);
+    },
     brackets: function (x) {
 	return Bracket.instanciate(x);
     },
@@ -481,6 +484,13 @@ var MinusPlus = {
     sumSeparator: operators.infix.minusPlus
 };
 MinusPlus = PrefixOperation.specialise(MinusPlus);
+
+var Not = {
+    __name__: "Not",
+    isNot: true,
+    prefixOp: operators.prefix.not
+};
+Not = PrefixOperation.specialise(Not);
 
 var Bracket = {
     __name__: "Bracket",
@@ -1359,6 +1369,7 @@ var priorities = [
     [Subscript, 96.5],
     [FunctionApplication, 96.5],
     [Derivative, 96.5],
+    [Not, 96.4],
     [Factorial, 96],
     [Differential, 96],
     [Sqrt, 95],

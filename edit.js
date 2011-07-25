@@ -247,6 +247,7 @@ var prefixUnaryOps = {
     "±": operations.prefixop(expr.plusMinus),
     "+-": operations.prefixop(expr.plusMinus),
     "-+": operations.prefixop(expr.minusPlus),
+    "not": operations.prefixop(expr.not),
     "(": operations.prefixop(expr.brackets),
     "d.": operations.prefixop(expr.differential),
     "from": operations.fromOp,

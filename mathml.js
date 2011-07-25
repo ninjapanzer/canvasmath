@@ -245,6 +245,9 @@ mathMLParser.registerFunction("and", null, function (args) {
 mathMLParser.registerFunction("or", null, function (args) {
     return expr.disjunction(args);
 });
+mathMLParser.registerFunction("not", 1, function (arg) {
+    return expr.not(arg);
+});
 ['eq', 'lt', 'gt', 'geq', 'leq'].forEach(function (relation) {
     mathMLParser.registerRelation(relation);
 });

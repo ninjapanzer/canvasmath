@@ -438,6 +438,9 @@ var MathMLSerializer = {
     Negation: function (e) {
 	return this.apply("minus", [e.value]);
     },
+    Not: function (e) {
+	return this.apply("not", [e.value]);
+    },
     Bracket: function (e) {
 	return this.exprToObject(e.expr);
     },
