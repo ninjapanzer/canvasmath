@@ -605,6 +605,30 @@ var MathMLSerializer = {
 	    tag: "matrix",
 	    children: rows
 	};
+    },
+    Piecewise: function (e) {
+	var self = this;
+	var pieces = e.operands.map(function (piece) {
+	    console.log(piece);
+	    if (piece.isConditionalExpression) {
+		return {
+		    tag: "piece",
+		    children: [
+			self.exprToObject(piece.expr),
+			self.exprToObject(piece.condition)
+		    ]
+		};
+	    } else {
+		return {
+		    tag: "otherwise",
+		    children: [self.exprToObject(piece)]
+		};
+	    }
+	});
+	return {
+	    tag: "piecewise",
+	    children: pieces
+	};
     }
 };
 MathMLSerializer = Prototype.specialise(MathMLSerializer);

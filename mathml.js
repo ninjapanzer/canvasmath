@@ -32,6 +32,18 @@ var mathMLParser = {
 	    return expr.parameter(name);
 	};
     },
+    registerRelation: function (relation) {
+	this.registerFunction(relation, null, function (args) {
+	    var argsWithRel = args.map(function (arg, i) {
+		if (!i) {
+		    return arg;
+		} else {
+		    return expr.exprWithRelation(arg, relation);
+		}
+	    });
+	    return expr.equation(argsWithRel);
+	});
+    },
     parse: function (el) {
 	var tag = el.tagName.toLowerCase();
 	if (this[tag]) {
@@ -101,6 +113,25 @@ var mathMLParser = {
 	    el = el.nextElementSibling;
 	}
 	return expr.matrix(rows);
+    },
+    piecewise: function (node) {
+	var el = node.firstElementChild;
+	var pieces = [];
+	while (el) {
+	    pieces.push(this.parse(el));
+	    el = el.nextElementSibling;
+	}
+	return expr.piecewise(pieces);
+    },
+    piece: function (node) {
+	var exprEl = node.firstElementChild;
+	var conditionEl = exprEl.nextElementSibling;
+	return expr.conditionalExpression(
+	    this.parse(exprEl), this.parse(conditionEl));
+    },
+    otherwise: function (node) {
+	var exprEl = node.firstElementChild;
+	return this.parse(exprEl);
     }
 };
 
@@ -213,4 +244,7 @@ mathMLParser.registerFunction("and", null, function (args) {
 });
 mathMLParser.registerFunction("or", null, function (args) {
     return expr.disjunction(args);
+});
+['eq', 'lt', 'gt', 'geq', 'leq'].forEach(function (relation) {
+    mathMLParser.registerRelation(relation);
 });

@@ -38,6 +38,12 @@ var expr = {
     disjunction: function (props) {
 	return Disjunction.instanciate(props);
     },
+    conditionalExpression: function (expr, cond) {
+	return ConditionalExpression.instanciate(expr, cond);
+    },
+    piecewise: function (pieces) {
+	return Piecewise.instanciate(pieces);
+    },
     power: function (x, y) {
 	return Power.instanciate(x, y);
     },
@@ -88,6 +94,9 @@ var expr = {
     },
     derivative: function (e, v) {
 	return Derivative.instanciate(e, v);
+    },
+    exprWithRelation: function (e, r) {
+	return ExprWithRelation.instanciate(e, r);
     },
     equation: function (ops) {
 	return Equation.instanciate(ops);
