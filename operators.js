@@ -50,7 +50,7 @@ var operators = {
 };
 
 operators.addSumOperator("plus", "+", "+");
-operators.addSumOperator("minus", "-", "\u2212");
+operators.addSumOperator("minus", "\u2212", "\u2212");
 operators.addSumOperator("plusMinus", "\u00b1", "\u00b1");
 operators.addSumOperator("minusPlus", "\u2213", "\u2213");
 

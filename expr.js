@@ -445,7 +445,7 @@ var PrefixOperation = {
     __name__: "PrefixOperation",
     childProperties: ["value"],
     layout: function (layout) {
-	var lneg = layout.text(this.prefixText);
+	var lneg = this.prefixOp.layout(layout);
 	var lval = this.subLayout(layout, this.value);
 	var ltrain = layout.train(lneg, lval);
 	lneg.bindExpr(this, "prefix");
@@ -461,7 +461,7 @@ PrefixOperation = FixedChildrenExpression.specialise(PrefixOperation);
 var Negation = {
     __name__: "Negation",
     isNegation: true,
-    prefixText: "-",
+    prefixOp: operators.prefix.minus,
     sumSeparator: operators.infix.minus
 };
 Negation = PrefixOperation.specialise(Negation);
@@ -469,7 +469,7 @@ Negation = PrefixOperation.specialise(Negation);
 var PlusMinus = {
     __name__: "PlusMinus",
     isPlusMinus: true,
-    prefixText: "\u00b1",
+    prefixOp: operators.prefix.plusMinus,
     sumSeparator: operators.infix.plusMinus
 };
 PlusMinus = PrefixOperation.specialise(PlusMinus);
@@ -477,7 +477,7 @@ PlusMinus = PrefixOperation.specialise(PlusMinus);
 var MinusPlus = {
     __name__: "MinusPlus", 
     isMinusPlus: true,
-    prefixText: "\u2213",
+    prefixOp: operators.prefix.minusPlus,
     sumSeparator: operators.infix.minusPlus
 };
 MinusPlus = PrefixOperation.specialise(MinusPlus);
