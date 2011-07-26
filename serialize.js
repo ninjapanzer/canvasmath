@@ -300,10 +300,14 @@ var MaximaSerializer = {
 MaximaSerializer = SimpleSerializer.specialise(MaximaSerializer);
 
 var MathMLSerializer = {
-    serialize: function (e, indent, indentStep) {
+    serialize: function (e, indent, indentStep, toHTML) {
+	var bits = this.serializeToBits(e);
+	return this.bitsToMathML(bits, indent || 0, indentStep || 2, toHTML);
+    },
+    serializeToBits: function (e) {
 	var bits = [];
 	this.objectToBits(this.exprToObject(e), bits);
-	return this.bitsToMathML(bits, indent || 0, indentStep || 2);
+	return bits;
     },
     exprToObject: function (e) {
 	return this[e.__name__](e);
@@ -315,9 +319,9 @@ var MathMLSerializer = {
 	    if (!obj.children || obj.children.length === 0) {
 		bits.push({
 		    type: "emptyTag",
-		    text: "<" + obj.tag + ">" + "</" + obj.tag + ">"
+		    htmltext: "<" + obj.tag + ">" + "</" + obj.tag + ">",
 		    // innerHTML doesn't like the following:
-		    //  text: "<" + obj.tag + "/>"
+		    xmltext: "<" + obj.tag + "/>"
 		});
 		return;
 	    }
@@ -347,15 +351,17 @@ var MathMLSerializer = {
 	    return;
 	}
     },
-    bitsToMathML: function (bits, indent, indentStep) {
+    bitsToMathML: function (bits, indent, indentStep, toHTML) {
 	var spaces = "                                                                                   ";
 	var lines = [];
 	var indentSpaces = spaces.substr(indent);
 	var inlineTag = false;
 	bits.forEach(function (bit, i) {
+	    var emptyTag;
 	    switch (bit.type) {
 	    case "emptyTag":
-		lines.push(spaces.substr(0, indent) + bit.text);
+		emptyTag = toHTML ? bit.htmltext : bit.xmltext;
+		lines.push(spaces.substr(0, indent) + emptyTag);
 		break;
 	    case "openTag":
 		lines.push(spaces.substr(0, indent) + bit.text);
