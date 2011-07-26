@@ -30,7 +30,7 @@ var tests = [
     "p or not q",
     "p and q and r",
     "x<y<z",
-    "f[x] = (2x-1 if 0 <= x <= 1 else x if 1 < x <=4 else 0)"
+    "f[x] = (\n    2x-1 if 0 <= x <= 1\n    else x if 1 < x <=4\n    else 0\n)"
 ];
 
 window.addEventListener("load", function () {

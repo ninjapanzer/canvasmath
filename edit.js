@@ -590,7 +590,7 @@ var editor = {
     parse: function (input) {
 	var edit = expr.editExpr();
 	var root = expr.root(edit);
-	this.interpret(edit, input);
+	this.interpret(edit, input.replace(/\s+/g, " "));
 	return root;
     }
 };
