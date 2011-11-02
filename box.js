@@ -690,18 +690,22 @@ var Frame = {
     },
     drawOnCanvas: function (ctx, x, y) {
 	var extra = this.extra;
-	ctx.save();
+	// Paint background first, then framed box, then draw
+	// frame
 	if (this.style.background) {
+	    ctx.save();
 	    ctx.fillStyle = this.style.background;
 	    ctx.fillRect(x, y - this.ascent, this.width, this.height);
+	    ctx.restore();
 	}
+	this.box.drawOnCanvas(ctx, x, y);
 	if (this.style.border && this.style.width) {
+	    ctx.save();
 	    ctx.strokeStyle = this.style.border;
 	    ctx.lineWidth = this.style.width;
 	    ctx.strokeRect(x, y - this.ascent, this.width, this.height);
+	    ctx.restore();
 	}
-	ctx.restore();
-	this.box.drawOnCanvas(ctx, x, y);
     },
     pushSubContainers: function (containers, x, y) {
 	this.box.pushContainers(containers, x, y);
@@ -736,7 +740,7 @@ var RootSign = {
 	ctx.stroke();
 	this.box.drawOnCanvas(ctx, 7, 0);
 	if (this.nth) {
-	    this.nth.alignOnCanvas(ctx, 0, -this.descent - 7 + this.nth.descent, "right");
+	    this.nth.alignOnCanvas(ctx, 0, this.nth.descent - 2/* - 7 + this.nth.descent*/, "right");
 	}
 	ctx.restore();
     },

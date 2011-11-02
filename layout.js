@@ -6,8 +6,12 @@ var layout = {
 	}
 	return expr.layout(this);
     },
-    select: function (l) {
-	return this.frame({background: "#AAFFAA"}, l);
+    select: function (l, editing) {
+	if (editing) {
+	    return this.lrEnclosure(l, "", "|", "red");
+	} else {
+	    return this.frame({background: "#AAFFAA"}, l);
+	}
     },
     train: function () {
 	var elems = arguments;
@@ -175,7 +179,12 @@ var LLREnclosure = {
 	    left = left && ColorBox.instanciate(this.color, left);
 	    right = right && ColorBox.instanciate(this.color, right);
 	}
-	var boxes = left ? [HSpace.instanciate(2), left, HSpace.instanciate(2)] : right;
+	var boxes;
+	if (left) {
+	    boxes = [HSpace.instanciate(2), left, HSpace.instanciate(2)];
+	} else {
+	    boxes = [];
+	}
 	boxes.push(box);
 	if (right) {
 	    boxes.push(HSpace.instanciate(2));

@@ -132,9 +132,11 @@ var operations = {
 	p.replaceChild(e, diff_e);
 	return diff_e;
     },
-    nthRoot: function (e) {
+    nthRoot: function (e, rhs) {
 	var p = e.parent;
-	var rhs = expr.editExpr();
+	if (!rhs) {
+	    rhs = expr.editExpr();
+	}
 	p.replaceChild(e, expr.sqrt(rhs, e.copy()));
 	return rhs;
     },
@@ -462,7 +464,7 @@ var editor = {
 	var comp, newTarget, kw;
 	if (input === undefined || input === null) {
 	    input = target.content;
-	}
+	} 
 	if (!input) {
 	    if (target.isEditExpr) {
 		if (target.operand) {

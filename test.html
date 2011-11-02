@@ -16,11 +16,24 @@
 h3, h4, h5 {
     margin: 0px;
 }
+.editor-button {
+    border: thin solid gray;
+    height: 40px;
+}
+
 </style>
 </head>
 <body>
 <h3>Javascript + Canvas Equation Editor Playground(Chrome only for now)</h3>
 <input type="checkbox" id="priority-mode"  />Priority Mode (check this for input to follow operator priority - quicker but can be confusing for some!)<br>
+<div>
+  <img class="editor-button" id="power-button" src="img/power-button.png" title="x^"></img>
+  <img class="editor-button" id="subscript-button" src="img/subscript-button.png" title="x_"></img>
+  <img class="editor-button" id="sqrt-button" src="img/sqrt-button.png" title="sqrt x"></img>
+  <img class="editor-button" id="cbrt-button" src="img/cbrt-button.png" title="3 root x"></img>
+ <img class="editor-button" id="root-button" src="img/root-button.png" title="x root"></img>
+  <img class="editor-button" id="fraction-button" src="img/fraction-button.png" title="x /"></img>
+</div>
 <canvas id="testcvs" width="700" height="300" style="border: 1px solid red"></canvas>
 <h5>Text area for serialization/deserialization</h5>
 <textarea id="serialization" style="width: 702px; height: 4em;"></textarea>

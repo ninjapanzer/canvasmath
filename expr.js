@@ -320,6 +320,7 @@ var FixedChildrenExpression = {
 };
 FixedChildrenExpression = Expression.specialise(FixedChildrenExpression);
 
+
 var OneChildExpression = {
     __name__: "OneChildExpression",
     __init__: function (child) {
@@ -500,7 +501,8 @@ var Bracket = {
     layout: function (layout) {
 	var lbracket;
 	var lexpr = layout.ofExpr(this.expr);
-	lbracket = layout.bracket(lexpr, "red");
+	// lbracket = layout.bracket(lexpr, "red");
+	lbracket = layout.frame({border: "red", width: 1}, lexpr);
 	lbracket.bindExpr(this);
 	return lbracket;
     }
@@ -799,12 +801,24 @@ var ConditionalExpression = {
     isConditionalExpression: true,
     childProperties: ["expr", "condition"],
     layout: function (layout) {
-	var lexpr = this.subLayout(layout, this.expr);
-	var lop = operators.infix.comma.layout(layout);
-	var lcond = this.subLayout(layout, this.condition);
-	var ltrain = layout.train([lexpr, lop, lcond]);
-	ltrain.bindExpr(this);
-	return ltrain;
+	if (this.expr.isConjunction) {
+	    var rows = this.expr.operands.map(function (e) {
+		return [layout.ofExpr(e)];
+	    });
+	    var lrows = layout.table(rows, 10, 2, "l");
+	    var lbr = layout.lrEnclosure(lrows, null, "}");
+	    var lconj = layout.raise(4, lbr);
+	    var ltrain = layout.train([lconj, layout.ofExpr(this.condition)]);
+	    ltrain.bindExpr(this);
+	    return ltrain;
+	} else {
+	    var lexpr = this.subLayout(layout, this.expr);
+	    var lop = operators.infix.comma.layout(layout);
+	    var lcond = this.subLayout(layout, this.condition);
+	    var ltrain = layout.train([lexpr, lop, lcond]);
+	    ltrain.bindExpr(this);
+	    return ltrain;
+	}
     }
 };
 ConditionalExpression = FixedChildrenExpression.specialise(ConditionalExpression);

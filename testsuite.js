@@ -33,11 +33,15 @@ var tests = [
     "f[x] = (\n    2x-1 if 0 <= x <= 1\n    else x if 1 < x <=4\n    else 0\n)"
 ];
 
+var nonMathMLTests = [
+    "(\n    x = a cos theta\n    and y = b sin theta\n) if 0 < theta <= 2pi"
+];
+
 window.addEventListener("load", function () {
     var tbody = $("tests");
-    tests.forEach(function (test) {
+    var showTest = function (test, nonMathML) {
+	console.log(test, nonMathML);
 	var e = editor.parse(test);
-	var mathMLBits = MathMLSerializer.serializeToBits(e);
 	// The following doesn't recognise entities such as &alpha;
 	// (and also I don't know if IE9 supports it)
 	/*
@@ -47,18 +51,23 @@ window.addEventListener("load", function () {
 	// So fallback onto innerHTML, which does, but has trouble parsing
 	// empty elements e.g. <plus/>, which is why empty elements are 
 	// serialized as e.g. <plus></plus> :(
-	var mathmlText = MathMLSerializer.bitsToMathML(mathMLBits, 0, 2);
-	var mathmlHTML = MathMLSerializer.bitsToMathML(mathMLBits, 0, 0, true);
-	var parent = $.make("math");
-	parent.innerHTML = mathmlHTML;
-	var mathml = parent.firstElementChild;
-	var parsedMathML = mathMLParser.parse(mathml);
+	if (!nonMathML) {
+	    var mathMLBits = MathMLSerializer.serializeToBits(e);
+	    var mathmlText = MathMLSerializer.bitsToMathML(mathMLBits, 0, 2);
+	    var mathmlHTML = MathMLSerializer.bitsToMathML(mathMLBits, 0, 0, true);
+	    var parent = $.make("math");
+	    parent.innerHTML = mathmlHTML;
+	    var mathml = parent.firstElementChild;
+	    var parsedMathML = mathMLParser.parse(mathml);
+	}
 	var row = $.make("tr",
 	    $.make("td", $.make("pre", test)),
 	    $.make("td", expr.drawOnNewCanvas(e)),
-	    $.make("td", $.make("pre", mathmlText)),
-	    $.make("td", expr.drawOnNewCanvas(parsedMathML))
+	    $.make("td", nonMathML ? "No MathML" : $.make("pre", mathmlText)),
+	    $.make("td", !nonMathML && expr.drawOnNewCanvas(parsedMathML))
 	);
 	tbody.appendChild(row);
-    });
+    };
+    tests.forEach(function (test) { showTest(test); });
+    nonMathMLTests.forEach(function (test) { showTest(test, true); });
 }, false);

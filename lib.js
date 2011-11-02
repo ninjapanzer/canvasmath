@@ -212,7 +212,9 @@ $.make = function (name) {
 	if (typeof arg === "string") {
 	    arg = document.createTextNode(arg);
 	}
+	if (arg) {
 	    el.appendChild(arg);
+	}
     }
     return el;
 };

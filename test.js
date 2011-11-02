@@ -88,6 +88,9 @@ var Selection = Prototype.specialise({
 	if (!expr) {
 	    return;
 	}
+	if (this.isEditing()) {
+	    this.reset({expr: editor.interpret(this.expr)});
+	}
 	this.replace(expr);
     },
     layout: function (layout) {
@@ -96,7 +99,7 @@ var Selection = Prototype.specialise({
 	    l.elems[1] = layout.select(l.elems[1]);
 	    return l;
 	} else {
-	    return layout.select(this.expr.layout(layout));
+	    return layout.select(this.expr.layout(layout), this.editing);
 	}
     },
     reset: function (s) {
@@ -110,6 +113,7 @@ var Selection = Prototype.specialise({
 	}
     },
     set: function (s) {
+	this.editing = false;
 	if (this.expr && s && s.expr !== this.expr) {
 	    this.expr.clearSelected();
 	    if (this.expr.isEditExpr) {
@@ -126,6 +130,12 @@ var Selection = Prototype.specialise({
 	    this.expr = this.start = this.stop = null;
 	    this.isSlice = false;
 	}
+    },
+    setEditing: function () {
+	this.editing = true;
+    },
+    isEditing: function () {
+	return this.editing;
     },
     moveUp: function () {
 	var s;
@@ -146,6 +156,7 @@ var Selection = Prototype.specialise({
 	    this.set(s);
 	    this.index++;
 	}
+	this.setEditing();
     },
     moveDown: function () {
 	var s;
@@ -158,6 +169,7 @@ var Selection = Prototype.specialise({
 	    this.stack.unshift(s);
 	    this.set(s);
 	}
+	this.setEditing();
     },
     moveLeft: function () {
 	if (this.isSlice) {
@@ -166,7 +178,10 @@ var Selection = Prototype.specialise({
 	    }
 	} else if (this.expr && this.expr.previousSibling) {
 	    this.reset({expr: this.expr.previousSibling});
+	} else {
+	    this.moveUp();
 	}
+	this.setEditing();
     },
     moveRight: function () {
 	if (this.isSlice) {
@@ -175,7 +190,10 @@ var Selection = Prototype.specialise({
 	    }
 	} else if (this.expr && this.expr.nextSibling) {
 	    this.reset({expr: this.expr.nextSibling});
+	} else {
+	    return;
 	}
+	this.setEditing();
     }
 });
 
@@ -229,6 +247,82 @@ var PositionedExpressions = Prototype.specialise({
     }
 });
 
+var Button = Prototype.specialise();
+
+var InputButton = Button.specialise({
+    action: function (selection) {
+	if (!selection.expr) {
+	    return;
+	}
+	var i;
+	var e = selection.expr;
+	for (i = 0; i < this.input.length; i++) {
+	    e = editor.addChar(e, this.input.charAt(i));
+	}
+	selection.reset({expr: e});
+    },
+    create: function (input) {
+	return this.instanciate({input: input});
+    }
+});
+
+var SimpleButton = Prototype.specialise({
+    action: function (selection) {
+	var e = selection.expr;
+	var e1;
+	if (selection.isEditing()) {
+	    e1 = editor.addChar(e, this.getInput(e));
+	    selection.reset({expr: e1});
+	    selection.setEditing();
+	} else if (selection.isSlice) {
+	    var r = expr.root(e.fromSlice(selection));
+	    e1 = this.getExpr(r.expr);
+		e.replaceSlice(selection, r.expr);
+	    selection.reset({expr: e1});
+	} else {
+	    selection.reset({expr: this.getExpr(e)});
+	}
+    }
+});
+
+var powerButton = SimpleButton.specialise({
+    getInput: function (e) { return  " ^ "; },
+    getExpr: function (e) { return operations.pow(e); }
+});
+
+var subscriptButton = SimpleButton.specialise({
+    getInput: function (e) { return " _ "; },
+    getExpr: function (e) { return operations.subscript(e); }
+});
+
+var sqrtButton = SimpleButton.specialise({
+    getInput: function (e) { return " sqrt "; },
+    getExpr: function (e) {
+	var e1 = e.copy();
+	e.parent.replaceChild(e, expr.sqrt(e1));
+	return e1;
+    }
+});
+
+var cbrtButton = SimpleButton.specialise({
+    getInput: function (e) { return " 3 root "; },
+    getExpr: function (e) {
+	var n = expr.number(3);
+	e.parent.replaceChild(e, n);
+	return operations.nthRoot(n, e); 
+    }
+});
+
+var rootButton = SimpleButton.specialise({
+    getInput: function (e) { return " root "; },
+    getExpr: function (e) { return operations.nthRoot(e); }
+});
+
+var fractionButton = SimpleButton.specialise({
+    getInput: function (e) { return " / "; },
+    getExpr: function (e) { return operations.frac(e); }
+});
+
 var testOnLoad = function () {
     var selection = Selection.instanciate();
     var shortcuts = KeyboardShortcuts.instanciate();
@@ -261,8 +355,10 @@ var testOnLoad = function () {
     var cutShortcut = shortcuts.add('C-x', function () {
 	if (selection.expr) {
 	    selection.copyToClipboard(clipboard);
+	} else {
+	    return;
 	}
-	if (selection.expr.parent.isRoot) {
+	if (!selection.isSlice && selection.expr.parent.isRoot) {
 	    posexprs.remove(selection.expr.parent);
 	} else {
 	    selection.remove();
@@ -278,6 +374,7 @@ var testOnLoad = function () {
 	e.stopPropagation();
 	posexprs.add(newExpr, mouseCoords.x, mouseCoords.y);
 	selection.reset({expr: ed});
+	selection.setEditing();
 	drawExprs();
     });
     var serializeShortcut = shortcuts.add('C-s', function (e) {
@@ -322,7 +419,7 @@ var testOnLoad = function () {
 		e.preventDefault();
 		e.stopPropagation();
 		if (selection.expr) {
-		    if (selection.expr.__proto__ === EditExpr) {
+		    if (selection.expr.isEditExpr) {
 			s = selection.expr.content;
 			if (s) {
 			    s = s.substr(0, s.length - 1);
@@ -341,12 +438,13 @@ var testOnLoad = function () {
 			selection.replace(sel);
 			selection.reset({expr: sel});
 		    }
+		    selection.setEditing();
 		}
 		break;
 	    case "U+0009": // Tab
 		e.preventDefault();
 		e.stopPropagation();
-		if (selection.expr && selection.expr.__proto__ === EditExpr) {
+		if (selection.expr && selection.expr.isEditExpr) {
 		    selection.expr.cycleCompletions();
 		}
 		break;
@@ -370,6 +468,7 @@ var testOnLoad = function () {
 	} else if (selection.expr) {
 	    selection.reset({expr: editor.addChar(selection.expr, c)});
 	}
+	selection.setEditing();
 	drawExprs();
     }, false);
     $("testcvs").addEventListener("mousedown", function (e) {
@@ -377,10 +476,14 @@ var testOnLoad = function () {
 	var item = posexprs.findFirstAt(coords.x, coords.y);
 	var target = null;
 	if (item) {
-	    target = getFirstBoundExpr(item.box, coords.x - item.x, coords.y - item.y);
+	    target = getFirstBoundExpr(
+		item.box,
+		coords.x - item.x, coords.y - item.y
+	    );
 	}
 	mouseDownExpr = target;
 	selection.reset({expr: target});
+	selection.setEditing();
 	drawExprs();
     }, false);
     $("testcvs").addEventListener("mouseout", function (e) {
@@ -395,7 +498,10 @@ var testOnLoad = function () {
 	if (!item) {
 	    return;
 	}
-	var target = getFirstBoundExpr(item.box, coords.x - item.x, coords.y - item.y);
+	var target = getFirstBoundExpr(
+	    item.box,
+	    coords.x - item.x, coords.y - item.y
+	);
 	if (mouseDownExpr) {
 	    var s = mouseDownExpr.getSelection(target);
 	    selection.reset(s);
@@ -437,4 +543,21 @@ var testOnLoad = function () {
 	    $("serialization").value = currentSerializer.serialize(selection.expr);
 	}
     }, false);
+    [
+	["power-button", powerButton],
+	["subscript-button", subscriptButton],
+	["sqrt-button", sqrtButton],
+	["cbrt-button", cbrtButton],
+	["root-button", rootButton],
+	["fraction-button", fractionButton]
+    ].forEach(function (x) {
+	var id = x[0];
+	var btn = x[1];
+	$(id).addEventListener("click", function (e) {
+	    if (selection.expr) {
+		btn.action(selection);
+		drawExprs();
+	    }
+	});
+    });
 };
