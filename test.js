@@ -53,9 +53,9 @@ var Selection = Prototype.specialise({
 	}
     },
     remove: function () {
-	var newExpr;
+	var newExpr, newParent;
 	if (!this.expr) {
-	    return;
+	    return null;
 	}
 	if (this.isSlice) {
 	    newExpr = this.start && this.start.previousSibling;
@@ -64,9 +64,10 @@ var Selection = Prototype.specialise({
 	    }
 	} else {
 	    newExpr = this.expr.previousSibling;
-	    this.expr.parent.removeChild(this.expr);
+	    newParent = this.expr.parent.removeChild(this.expr);
 	}
-	this.reset({expr: newExpr});
+	this.reset({expr: null});
+	return newParent;
     },
     copyToClipboard: function (clipboard) {
 	var expr;
@@ -172,7 +173,7 @@ var Selection = Prototype.specialise({
 	this.setEditing();
     },
     moveLeft: function () {
-	if (this.isSlice) {
+	/*if (this.isSlice) {
 	    if (this.start && this.start.previousSibling) {
 		this.reset({expr: this.start.previousSibling});
 	    }
@@ -180,11 +181,12 @@ var Selection = Prototype.specialise({
 	    this.reset({expr: this.expr.previousSibling});
 	} else {
 	    this.moveUp();
-	}
+	}*/
+	this.reset({expr: this.expr.getPredecessor2()});
 	this.setEditing();
     },
     moveRight: function () {
-	if (this.isSlice) {
+	/*if (this.isSlice) {
 	    if (this.stop && this.stop.nextSibling) {
 		this.reset({expr: this.stop.nextSibling});
 	    }
@@ -192,7 +194,8 @@ var Selection = Prototype.specialise({
 	    this.reset({expr: this.expr.nextSibling});
 	} else {
 	    return;
-	}
+	}*/
+	this.reset({expr: this.expr.getSuccessor2()});
 	this.setEditing();
     }
 });
@@ -425,12 +428,12 @@ var testOnLoad = function () {
 			    s = s.substr(0, s.length - 1);
 			    editor.interpret(selection.expr, s, true);
 			} else {
-			    sel = selection.expr.getPredecessor();
-			    selection.remove();
-			    if (sel.isRoot) {
-				posexprs.remove(sel);
+			    var pred = selection.expr.getPredecessor();
+			    var newParent = selection.remove();
+			    if (pred.isRoot) {
+				posexprs.remove(pred);
 			    } else {
-				selection.reset({expr: sel});
+				selection.reset({expr: newParent || pred});
 			    }
 			}
 		    } else {

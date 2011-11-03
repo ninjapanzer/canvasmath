@@ -8,6 +8,7 @@ var layout = {
     },
     select: function (l, editing) {
 	if (editing) {
+	    l = this.frame({background: "#DDDDDD"}, l);
 	    return this.lrEnclosure(l, "", "|", "red");
 	} else {
 	    return this.frame({background: "#AAFFAA"}, l);

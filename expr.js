@@ -135,7 +135,7 @@ var Expression = {
 	return false;
     },
     removeChild: function (e) {
-	return false;
+	return null;
     },
     setPreviousSibling: function (prev, reciprocate) {
 	this.previousSibling = prev;
@@ -210,6 +210,31 @@ var Expression = {
 	    return e;
 	}
 	return this.parent;
+    },
+    getPredecessor2: function () {
+	var e = this.lastChild;
+	if (e) {
+	    return e;
+	} else {
+	    for (e = this; !e.previousSibling; e = e.parent) {
+		if (e.isRoot) {
+		    return this;
+		}
+	    }
+	    return e.previousSibling;
+	}
+	
+    },
+    getSuccessor2: function () {
+	var e = this.nextSibling;
+	if (e) {
+	    while (e.firstChild) {
+		e = e.firstChild;
+	    }
+	    return e;
+	} else {
+	    return this.parent.isRoot ? this : this.parent;
+	}
     },
     getPreviousLeaf: function () {
 	// Unused
@@ -307,15 +332,30 @@ var FixedChildrenExpression = {
     },
     removeChild: function (child) {
 	var self = this;
-	return this.childProperties.some(function (prop) {
+	var newSelf = null;
+	var nonEmptyChildCount = 0;
+	var nonEmptyChild = null;
+        this.childProperties.forEach(function (prop) {
+	    var child = self[prop];
+            if (child && !(child.isEditExpr && child.isEmpty())) {
+		nonEmptyChildCount++;
+		nonEmptyChild = child;
+	    }
+	});
+	this.childProperties.some(function (prop) {
 	    if (self[prop] === child) {
 		if (self.optionalProperties[prop]) {
 		    self[prop] = null;
-		    return true;
 		}
+		if (nonEmptyChildCount <= 1) {
+		    newSelf = nonEmptyChildCount ? nonEmptyChild : child;
+		    self.parent.replaceChild(self, newSelf);
+		}
+		return true;
 	    }
 	    return false;
 	});
+	return newSelf;
     }
 };
 FixedChildrenExpression = Expression.specialise(FixedChildrenExpression);
@@ -595,7 +635,7 @@ var VarLenOperation = {
 	    return null;
 	} else if (this.operands.length === 2 && !this.oneOperandPossible) {
 	    this.parent.replaceChild(this, this.operands[1 - i]);
-	    return true;
+	    return this.operands[1 - i];
 	} else {
 	    this.operands.splice(i, 1);
 	    if (i) {
@@ -604,7 +644,7 @@ var VarLenOperation = {
 	    if (i < this.operands.length) {
 		this.operands[i].setPreviousSibling(this.operands[i - 1]);
 	    }
-	    return true;
+	    return null;
 	}
     },
     removeSlice: function (slice) {
@@ -1030,10 +1070,8 @@ var TrigFunction = {
 	    return this.parent.removeChild(this);
 	} else if (child === this.power) {
 	    this.power = undefined;
-	    return true;
-	} else {
-	    return false;
 	}
+	return null;
     }
 };
 TrigFunction = Expression.specialise(TrigFunction);
@@ -1114,7 +1152,7 @@ var Matrix = {
 	    }, 0);
 	    if (nItems === 2) {
 		self.parent.replaceChild(self, prev || next);
-		return;
+		return prev || next;
 	    } else if (row.length === 1) {
 		self.rows.splice(i, 1);
 	    } else {
@@ -1125,6 +1163,7 @@ var Matrix = {
 	    } else {
 		next.setPreviousSibling(prev, true);
 	    }
+	    return null;
 	});
     },
     insertAfterInRow: function (oldItem, newItem) {
