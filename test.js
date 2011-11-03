@@ -114,7 +114,7 @@ var Selection = Prototype.specialise({
 	}
     },
     set: function (s) {
-	this.editing = false;
+	this.clearEditing();
 	if (this.expr && s && s.expr !== this.expr) {
 	    this.expr.clearSelected();
 	    if (this.expr.isEditExpr) {
@@ -133,7 +133,18 @@ var Selection = Prototype.specialise({
 	}
     },
     setEditing: function () {
+	if (!this.editing) {
+	    $("editor-buttons").className = "show";
+	    $("hi-editor-buttons").className = "hide";
+	}
 	this.editing = true;
+    },
+    clearEditing: function () {
+	if (this.editing) {
+	    $("hi-editor-buttons").className = "show";
+	    $("editor-buttons").className = "hide";
+	}
+	this.editing = false;
     },
     isEditing: function () {
 	return this.editing;
@@ -556,11 +567,13 @@ var testOnLoad = function () {
     ].forEach(function (x) {
 	var id = x[0];
 	var btn = x[1];
-	$(id).addEventListener("click", function (e) {
+	var listener = function (e) {
 	    if (selection.expr) {
 		btn.action(selection);
 		drawExprs();
 	    }
-	});
+	}
+	$(id).addEventListener("click", listener);
+	$("hi-" + id).addEventListener("click", listener);
     });
 };

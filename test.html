@@ -20,13 +20,19 @@ h3, h4, h5 {
     border: thin solid gray;
     height: 40px;
 }
+.show {
+    display: block;
+}
+.hide {
+    display: none;
+}
 
 </style>
 </head>
 <body>
 <h3>Javascript + Canvas Equation Editor Playground(Chrome only for now)</h3>
 <input type="checkbox" id="priority-mode"  />Priority Mode (check this for input to follow operator priority - quicker but can be confusing for some!)<br>
-<div>
+<div id="editor-buttons" class="show">
   <img class="editor-button" id="power-button" src="img/power-button.png" title="x^"></img>
   <img class="editor-button" id="subscript-button" src="img/subscript-button.png" title="x_"></img>
   <img class="editor-button" id="sqrt-button" src="img/sqrt-button.png" title="sqrt x"></img>
@@ -34,6 +40,15 @@ h3, h4, h5 {
  <img class="editor-button" id="root-button" src="img/root-button.png" title="x root"></img>
   <img class="editor-button" id="fraction-button" src="img/fraction-button.png" title="x /"></img>
 </div>
+<div id="hi-editor-buttons" class="hide">
+  <img class="editor-button" id="hi-power-button" src="img/hi-power-button.png" title="x^"></img>
+  <img class="editor-button" id="hi-subscript-button" src="img/hi-subscript-button.png" title="x_"></img>
+  <img class="editor-button" id="hi-sqrt-button" src="img/hi-sqrt-button.png" title="sqrt x"></img>
+  <img class="editor-button" id="hi-cbrt-button" src="img/hi-cbrt-button.png" title="3 root x"></img>
+ <img class="editor-button" id="hi-root-button" src="img/hi-root-button.png" title="x root"></img>
+  <img class="editor-button" id="hi-fraction-button" src="img/hi-fraction-button.png" title="x /"></img>
+</div>
+
 <canvas id="testcvs" width="700" height="300" style="border: 1px solid red"></canvas>
 <h5>Text area for serialization/deserialization</h5>
 <textarea id="serialization" style="width: 702px; height: 4em;"></textarea>
