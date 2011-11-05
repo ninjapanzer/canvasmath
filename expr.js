@@ -223,7 +223,6 @@ var Expression = {
 	    }
 	    return e.previousSibling;
 	}
-	
     },
     getSuccessor2: function () {
 	var e = this.nextSibling;
@@ -487,6 +486,7 @@ Subscript = FixedChildrenExpression.specialise(Subscript);
 
 var PrefixOperation = {
     __name__: "PrefixOperation",
+    isPrefixOperation: true,
     childProperties: ["value"],
     layout: function (layout) {
 	var lneg = this.prefixOp.layout(layout);
@@ -720,9 +720,18 @@ var Sum = {
 	var op;
 	var term = this.operands[i];
 	if (i) {
-	    op = term.sumSeparator.layout(layout);
-	    op.bindExpr(term);
-	    term = term.getSumExpression();
+	    if (term.selected) {
+		if (term.isPrefixOperation) {
+		    op = operators.infix.empty.layout(layout);
+		} else {
+		    op = Expression.sumSeparator.layout(layout);
+		}
+		op.bindExpr(term);
+	    } else {
+		op = term.sumSeparator.layout(layout);
+		op.bindExpr(term);
+		term = term.getSumExpression();
+	    }
 	    train.push(op);
 	}
 	train.push(this.subLayout(layout, term));
