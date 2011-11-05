@@ -90,7 +90,7 @@ var Selection = Prototype.specialise({
 	    return;
 	}
 	if (this.isEditing()) {
-	    this.reset({expr: editor.interpret(this.expr)});
+	    this.reset({expr: parser.interpret(this.expr)});
 	}
 	this.replace(expr);
     },
@@ -118,7 +118,7 @@ var Selection = Prototype.specialise({
 	if (this.expr && s && s.expr !== this.expr) {
 	    this.expr.clearSelected();
 	    if (this.expr.isEditExpr) {
-		editor.interpret(this.expr);
+		parser.interpret(this.expr);
 	    }
 	}
 	if (s && s.expr) {
@@ -271,7 +271,7 @@ var InputButton = Button.specialise({
 	var i;
 	var e = selection.expr;
 	for (i = 0; i < this.input.length; i++) {
-	    e = editor.addChar(e, this.input.charAt(i));
+	    e = parser.addChar(e, this.input.charAt(i));
 	}
 	selection.reset({expr: e});
     },
@@ -285,7 +285,7 @@ var SimpleButton = Prototype.specialise({
 	var e = selection.expr;
 	var e1;
 	if (selection.isEditing()) {
-	    e1 = editor.addChar(e, this.getInput(e));
+	    e1 = parser.addChar(e, this.getInput(e));
 	    selection.reset({expr: e1});
 	    selection.setEditing();
 	} else if (selection.isSlice) {
@@ -437,7 +437,7 @@ var testOnLoad = function () {
 			s = selection.expr.content;
 			if (s) {
 			    s = s.substr(0, s.length - 1);
-			    editor.interpret(selection.expr, s, true);
+			    parser.interpret(selection.expr, s, true);
 			} else {
 			    var pred = selection.expr.getPredecessor();
 			    var newParent = selection.remove();
@@ -474,13 +474,13 @@ var testOnLoad = function () {
 	c = String.fromCharCode(e.charCode);
 	if (selection.isSlice) {
 	    var r = root(selection.expr.fromSlice(selection));
-	    var e2 = editor.addChar(r.firstChild, c);
+	    var e2 = parser.addChar(r.firstChild, c);
 	    if (e2) {
 		selection.expr.replaceSlice(selection, r.firstChild);
 	    }
 	    selection.reset({expr: e2});
 	} else if (selection.expr) {
-	    selection.reset({expr: editor.addChar(selection.expr, c)});
+	    selection.reset({expr: parser.addChar(selection.expr, c)});
 	}
 	selection.setEditing();
 	drawExprs();

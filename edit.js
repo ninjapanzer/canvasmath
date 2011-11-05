@@ -102,7 +102,6 @@ var operations = {
 	var p;
 	for (p = e.parent; !p.isRoot; p = p.parent) {
 	    if (p.isBracket) {
-		// editor.interpret(e);
 		e = p.expr;
 		e.isGroup = true;
 		p.parent.replaceChild(p, e);
@@ -403,7 +402,7 @@ prefixKeywords.updateWithObject(prefixUnaryOps, "PrefixOp");
 postfixKeywords.updateWithObject(infixBinaryOps, "InfixOp");
 postfixKeywords.updateWithObject(postfixUnaryOps, "PostfixOp");
 
-var editor = {
+var parser = {
     interpretNumber: function (input, target) {
 	var numberExpr = expr.number(parseFloat(input));
 	if (target.operand) {
