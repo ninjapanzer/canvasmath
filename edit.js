@@ -373,12 +373,15 @@ var functions = {
 var Keywords = Prototype.specialise({
     __init__: function () {
 	this.list = [];
+	this.map = {};
     },
     updateWithObject: function (obj, type) {
-	var kw;
+	var kw, info;
 	for (kw in obj) {
 	    if (obj.hasOwnProperty(kw)) {
-		this.list.push({kw: kw, type: type, value: obj[kw]});
+		info = {kw: kw, type: type, value: obj[kw]};
+		this.list.push(info);
+		this.map[kw] = info;
 	    }
 	}
 	this.list.sort(function (x, y) {
@@ -400,6 +403,9 @@ var Keywords = Prototype.specialise({
 	    }
 	});
 	return {completions: completions, longestPrefix: longestPrefix};
+    },
+    contains: function (kw) {
+	return this.map.hasOwnProperty(kw);
     }
 });
 

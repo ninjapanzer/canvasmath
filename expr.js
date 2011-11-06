@@ -104,8 +104,8 @@ var expr = {
     equation: function (ops) {
 	return Equation.instanciate(ops);
     },
-    dummy: function () {
-	return expr.integer(0);
+    nocopy: function () {
+	return NoCopyExpression.instanciate();
     },
     drawOnNewCanvas: function (e) {
 	var box = layout.ofExpr(e).box();
@@ -447,6 +447,23 @@ var Number_ = {
     needsFactorSeparator: true
 };
 Number_ = Expression.specialise(Number_);
+
+var NoCopyExpression = {
+    __name__: "Dummy",
+    layout: function (layout) {
+	return layout.text("[nocopy]");
+    },
+    copy: function () {
+	var prop;
+	for (prop in this) {
+	    if (this.hasOwnProperty(prop)) {
+		delete this[prop];
+	    }
+	}
+	return this;
+    }
+};
+NoCopyExpression = Expression.specialise(NoCopyExpression);
 
 var Parameter = {
     __name__: "Parameter",
@@ -1228,7 +1245,7 @@ var EditExpr = {
 	}
     },
     copy: function () {
-	return expr.editExpr(this.content);
+	return expr.editExpr(this.content, this.operand);
     },
     isEmpty: function () {
 	return !this.content;

@@ -285,13 +285,20 @@ var SimpleButton = Prototype.specialise({
 	var e = selection.expr;
 	var e1;
 	if (selection.isEditing()) {
-	    e1 = parser.addChar(e, this.getInput(e));
-	    selection.reset({expr: e1});
-	    selection.setEditing();
+	    e = parser.interpret(e);
+	    if (this.isPostfix && e.isEditExpr && e.isEmpty() && !e.operand) {
+		selection.reset({expr: this.getExpr(e)});
+		selection.setEditing();
+	    } else {
+		e1 = parser.addChar(e, this.getInput(e));
+		//console.log(e, e1);
+		selection.reset({expr: e1});
+		selection.setEditing();
+	    }
 	} else if (selection.isSlice) {
 	    var r = expr.root(e.fromSlice(selection));
 	    e1 = this.getExpr(r.expr);
-		e.replaceSlice(selection, r.expr);
+	    e.replaceSlice(selection, r.expr);
 	    selection.reset({expr: e1});
 	} else {
 	    selection.reset({expr: this.getExpr(e)});
@@ -300,11 +307,13 @@ var SimpleButton = Prototype.specialise({
 });
 
 var powerButton = SimpleButton.specialise({
+    isPostfix: true,
     getInput: function (e) { return  " ^ "; },
     getExpr: function (e) { return operations.pow(e); }
 });
 
 var subscriptButton = SimpleButton.specialise({
+    isPostfix: true,
     getInput: function (e) { return " _ "; },
     getExpr: function (e) { return operations.subscript(e); }
 });
@@ -328,11 +337,13 @@ var cbrtButton = SimpleButton.specialise({
 });
 
 var rootButton = SimpleButton.specialise({
+    isPostfix: true,
     getInput: function (e) { return " root "; },
     getExpr: function (e) { return operations.nthRoot(e); }
 });
 
 var fractionButton = SimpleButton.specialise({
+    isPostfix: true,
     getInput: function (e) { return " / "; },
     getExpr: function (e) { return operations.frac(e); }
 });
