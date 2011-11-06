@@ -532,7 +532,7 @@ var testOnLoad = function () {
     $("priority-mode").addEventListener("click", function (e) {
 	operations.priorityMode = this.checked;
     }, false);
-    operations.priorityMode = $("priority-mode").checked = true;
+    operations.priorityMode = $("priority-mode").checked = false;
     $("prefixkwlist").innerHTML = prefixKeywords.list.
 	map(function (x) { return x.kw; }).join(" ");
     $("postfixkwlist").innerHTML = postfixKeywords.list.

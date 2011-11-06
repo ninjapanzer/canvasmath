@@ -7,15 +7,26 @@ var operations = {
 	if (this.priorityMode || Op.isProposition) {
 	    while (!e.parent.isRoot && !e.parent.isBracket && 
 		e.parent.priority > Op.priority) {
+		/*if (e === e.parent.from) {
+		    break;
+		}*/
+		e = e.parent;
+	    }
+	} else {
+	    if (Op == Sum && e.parent.isProduct) {
+		e = e.parent;
+	    }
+	    if (Op == Sum && e.parent.isPrefixOperation) {
 		e = e.parent;
 	    }
 	}
 	// The next two lines are a hack to allow e.g. sin^2x to mean sin^2(x)
-	if (Op === Product && e.parent.isTrigFunction && e === e.parent.power) {
+	if (this.priorityMode && 
+	    Op === Product && e.parent.isTrigFunction && e === e.parent.power) {
 	    e.parent.replaceChild(e.parent.arg, rhs);
 	} else // end of hack XXX
 	// Now a hack to allow sum from(i=1) to (n) (1/n)
-	if (Op === Product && e.parent.isOpOf && 
+	if (this.priorityMode && Op === Product && e.parent.isOpOf && 
 		(e === e.parent.to || e === e.parent.from)) {
 	    e.parent.replaceChild(e.parent.arg, rhs);
 	} else // end of hack XXX
@@ -186,7 +197,7 @@ var operations = {
     fromOp: function(e, rhs) {
 	var target = e;
 	rhs = expr.editExpr();
-	if (operations.priorityMode) {
+	if (true || operations.priorityMode) {
 	    while (!target.isRoot && !target.setFrom && !target.isBracket) {
 		target = target.parent;
 	    }
@@ -200,7 +211,7 @@ var operations = {
     toOp: function(e, rhs) {
 	var target = e;
 	rhs = expr.editExpr();
-	if (operations.priorityMode) {
+	if (true || operations.priorityMode) {
 	    while (!target.isRoot && !target.setTo && !target.isBracket) {
 		target = target.parent;
 	    }
