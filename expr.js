@@ -1301,6 +1301,26 @@ var Matrix = {
 	    self.rows.splice(i + 1, 0, newRow);
 	});
     },
+    getNextChildUp: function (child) {
+	var self = this;
+	var next = null;
+	this.findChild(child, function (row, i, item, j) {
+	    if (i > 0) {
+	        next = self.rows[i - 1][j];
+	    }
+	});
+	return next;
+    },
+    getNextChildDown: function (child) {
+	var self = this;
+	var next = null;
+	this.findChild(child, function (row, i, item, j) {
+	    if (i < self.rows.length) {
+	        next = self.rows[i + 1][j];
+	    }
+	});
+	return next;
+    },
     needsFactorSeparator: true
 };
 Matrix = Expression.specialise(Matrix);
