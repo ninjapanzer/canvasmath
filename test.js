@@ -117,7 +117,7 @@ var Selection = Prototype.specialise({
 	this.clearEditing();
 	if (this.expr && s && s.expr !== this.expr) {
 	    this.expr.clearSelected();
-	    if (this.expr.isEditExpr) {
+	    if (this.expr.isEditExpr && this.expr.parent) {
 		parser.interpret(this.expr);
 	    }
 	}
@@ -153,7 +153,7 @@ var Selection = Prototype.specialise({
 	var s;
 	if (!this.expr) {
 	    return;
-	} else if (this.stack.length > this.index + 1) {
+	}/* else if (this.stack.length > this.index + 1) {
 	    this.set(this.stack[++this.index]);
 	} else if (this.isSlice) {
 	    s = {expr: this.expr};
@@ -167,20 +167,22 @@ var Selection = Prototype.specialise({
 	    this.stack.push(s);
 	    this.set(s);
 	    this.index++;
-	}
+	}*/
+	this.reset({expr: this.expr.getVPredecessor()});
 	this.setEditing();
     },
     moveDown: function () {
 	var s;
 	if (!this.expr) {
 	    return;
-	} else if (this.index > 0) {
+	}/* else if (this.index > 0) {
 	    this.set(this.stack[--this.index]);
 	} else if (this.expr.firstChild) {
 	    s = {expr: this.expr.firstChild};
 	    this.stack.unshift(s);
 	    this.set(s);
-	}
+	}*/
+	this.reset({expr: this.expr.getVSuccessor()});
 	this.setEditing();
     },
     moveLeft: function () {

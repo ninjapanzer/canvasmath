@@ -139,7 +139,7 @@ var Expression = {
     },
     setPreviousSibling: function (prev, reciprocate) {
 	this.previousSibling = prev;
-	if (!prev) {
+	if (!prev && this.parent) {
 	    this.parent.firstChild = this;
 	} else if (reciprocate) {
 	    prev.setNextSibling(this);
@@ -147,7 +147,7 @@ var Expression = {
     },
     setNextSibling: function (next, reciprocate) {
 	this.nextSibling = next;
-	if (!next) {
+	if (!next && this.parent) {
 	    this.parent.lastChild = this;
 	} else if (reciprocate) {
 	    next.setPreviousSibling(this);
@@ -235,6 +235,46 @@ var Expression = {
 	    return this.parent.isRoot ? this : this.parent;
 	}
     },
+    getVPredecessor: function () {
+	var e = this.getSiblingUp();
+	if (e) {
+	    while (e.firstChild) {
+		e = e.getBottomChild();
+	    }
+	    return e;
+	} else {
+	    return this.parent.isRoot ? this : this.parent;
+	}
+    },
+    getVSuccessor: function () {
+	var e = this.getTopChild();
+	if (e) {
+	    return e;
+	} else {
+	    for (e = this; !e.getSiblingDown(); e = e.parent) {
+		if (e.isRoot) {
+		    return this;
+		}
+	    }
+	    return e.getSiblingDown();
+	}
+    },
+    getSiblingUp: function () {
+	return this.parent.getNextChildUp(this);
+    },
+    getSiblingDown: function () {
+	return this.parent.getNextChildDown(this);
+    },
+    getNextChildUp: function (child) {
+    },
+    getNextChildDown: function (child) {
+    },
+    getTopChild: function () {
+	return this.lastChild;
+    },
+    getBottomChild: function () {
+	return this.firstChild;
+    },
     getPreviousLeaf: function () {
 	// Unused
 	var e;
@@ -267,17 +307,17 @@ var Expression = {
 	var p;
 	this.selected = sel;
 	// Following unused
-	for (p = this; !p.isRoot; p = p.parent) {
+	/*for (p = this; !p.isRoot; p = p.parent) {
 	    p.containsSelection = true;
-	}
+	}*/
     },
     clearSelected: function () {
 	var p;
 	this.selected = false;
 	// Following unused
-	for (p = this; !p.isRoot; p = p.parent) {
+	/*for (p = this; !p.isRoot; p = p.parent) {
 	    p.containsSelection = false;
-	}
+	}*/
     },
     needsFactorSeparator: false,
     sumSeparator: operators.infix.plus,
@@ -291,6 +331,7 @@ var FixedChildrenExpression = {
     __name__: "FixedChildrenExpression",
     childProperties: [], // This needs to be set
     optionalProperties: {}, // this needs to be set
+    vOrder: [], // this needs to be set
     __init__: function () {
 	var initArgs = arguments;
 	var lastChildIndex = this.childProperties.length - 1;
@@ -301,6 +342,7 @@ var FixedChildrenExpression = {
 	    var next = i < lastChildIndex ? initArgs[i + 1] : undefined;
 	    if (arg) {
 		self[prop] = arg;
+		arg.parentIndex = i;
 		arg.setRelations(self, prev, next);
 	    }
 	    prev = arg;
@@ -317,17 +359,13 @@ var FixedChildrenExpression = {
 	return copy;
     },
     replaceChild: function (oldChild, newChild) {
-	var self = this;
-	return this.childProperties.some(function (prop) {
-	    var child = self[prop];
-	    if (child === oldChild) {
-		self[prop] = newChild;
-		newChild.setRelations(self, 
-			child.previousSibling, child.nextSibling, true);
-		return true;
-	    }
-	    return false;
-	});
+	var i = oldChild.parentIndex;
+	var prop = this.childProperties[i];
+	newChild.parentIndex = i;
+	this[prop] = newChild;
+	newChild.setRelations(this, 
+	    oldChild.previousSibling, oldChild.nextSibling, true);
+	oldChild.setRelations();
     },
     removeChild: function (child) {
 	var self = this;
@@ -341,20 +379,47 @@ var FixedChildrenExpression = {
 		nonEmptyChild = child;
 	    }
 	});
-	this.childProperties.some(function (prop) {
-	    if (self[prop] === child) {
-		if (self.optionalProperties[prop]) {
-		    self[prop] = null;
-		}
-		if (nonEmptyChildCount <= 1) {
-		    newSelf = nonEmptyChildCount ? nonEmptyChild : child;
-		    self.parent.replaceChild(self, newSelf);
-		}
-		return true;
-	    }
-	    return false;
-	});
+	var i = child.parentIndex;
+	var prop = this.childProperties[i];
+	if (self.optionalProperties[prop]) {
+	    self[prop] = null;
+	}
+	if (nonEmptyChildCount <= 1) {
+	    newSelf = nonEmptyChildCount ? nonEmptyChild : child;
+	    self.parent.replaceChild(self, newSelf);
+	}
+	child.setRelations();
 	return newSelf;
+    },
+    getTopChild: function () {
+	var i, e;
+	for (i = 0; i < this.vOrder.length; i++) {
+	    e = this[this.vOrder[i]];
+	    if (e) {
+		return e;
+	    }
+	}
+	return null;
+    },
+    getBottomChild: function () {
+	var i, e;
+	for (i = this.vOrder.length; i >= 0; i--) {
+	    e = this[this.vOrder[i]];
+	    if (e) {
+		return e;
+	    }
+	}
+	return null;
+    },
+    getNextChildUp: function (child) {
+	var prop = this.childProperties[child.parentIndex];
+	var i = this.vOrder.indexOf(prop);
+	return this[this.vOrder[i - 1]] || null;
+    },
+    getNextChildDown: function (child) {
+	var prop = this.childProperties[child.parentIndex];
+	var i = this.vOrder.indexOf(prop);
+	return this[this.vOrder[i + 1]] || null;
     }
 };
 FixedChildrenExpression = Expression.specialise(FixedChildrenExpression);
@@ -390,6 +455,7 @@ var OneChildExpression = {
 	if (this.child === oldChild) {
 	    this.child = newChild;
 	    newChild.setRelations(this);
+	    oldChild.setRelations();
 	    return true;
 	}
 	return false;
@@ -421,6 +487,7 @@ var RootExpression = {
 	if (oldChild === this.expr) {
 	    this.expr = newChild;
 	    newChild.setRelations(this, null, null);
+	    oldChild.setRelations();
 	    return newChild;
 	}
 	return null;
@@ -489,6 +556,7 @@ Parameter = Expression.specialise(Parameter);
 var Subscript = {
     __name__: "Subscript",
     childProperties: ["base", "subscript"],
+    vOrder: ["base", "subscript"],
     layout: function (layout) {
 	var l = layout.subscript(
 	    this.subLayout(layout, this.base),
@@ -496,6 +564,18 @@ var Subscript = {
 	);
 	l.bindExpr(this);
 	return l;
+    },
+    getNextChildUp: function (child) {
+	if (child === this.subscript) {
+	    return this.base;
+	}
+	return null;
+    },
+    getNextChildDown: function (child) {
+	if (child === this.base) {
+	    return this.subscript;
+	}
+	return null;
     }
 };
 Subscript = FixedChildrenExpression.specialise(Subscript);
@@ -505,6 +585,7 @@ var PrefixOperation = {
     __name__: "PrefixOperation",
     isPrefixOperation: true,
     childProperties: ["value"],
+    vOrder: ["value"],
     layout: function (layout) {
 	var lneg = this.prefixOp.layout(layout);
 	var lval = this.subLayout(layout, this.value);
@@ -555,6 +636,7 @@ var Bracket = {
     isBracket: true,
     isContainer: true,
     childProperties: ["expr"],
+    vOrder: ["expr"],
     layout: function (layout) {
 	var lbracket;
 	var lexpr = layout.ofExpr(this.expr);
@@ -650,7 +732,9 @@ var VarLenOperation = {
 	var i = this.operands.indexOf(child);
 	if (i === -1) {
 	    return null;
-	} else if (this.operands.length === 2 && !this.oneOperandPossible) {
+	}
+	child.setRelations();
+	if (this.operands.length === 2 && !this.oneOperandPossible) {
 	    this.parent.replaceChild(this, this.operands[1 - i]);
 	    return this.operands[1 - i];
 	} else {
@@ -941,6 +1025,7 @@ var Power = {
     __name__: "Power",
     isPower: true,
     childProperties: ["base", "power"],
+    vOrder: ["power", "base"],
     subLayout: function (layout, subexpr) {
 	// This is to make sure roots are surrounded in brackets.
 	// The general rule fails to do this as roots are containers
@@ -969,12 +1054,10 @@ var Fraction = {
     __name__: "Fraction",
     isFraction: true,
     childProperties: ["num", "den"],
+    vOrder: ["num", "den"],
     __init__: function (num, den, keepScale) {
-	this.num = num;
-	this.den = den;
+	FixedChildrenExpression.__init__.call(this, num, den);
 	this.scaleDown = !keepScale;
-	num.setRelations(this, null, den);
-	den.setRelations(this, num, null);
     },
     layout: function (layout) {
 	var line = layout.hline(null, 1);
@@ -1022,10 +1105,12 @@ var Sqrt = {
 	if (oldChild === this.expr) {
 	    this.expr = newChild;
 	    newChild.setRelations(this, null, this.nth);
+	    oldChild.setRelations();
 	    return true;
 	} else if (oldChild === this.nth) {
 	    this.nth = newChild;
 	    newChild.setRelations(this, this.expr, null);
+	    oldChild.setRelations();
 	    return true;
 	}
 	return false;
@@ -1083,10 +1168,12 @@ var TrigFunction = {
 	if (oldChild === this.arg) {
 	    this.arg = newChild;
 	    newChild.setRelations(this, null, this.power, true);
+	    oldChild.setRelations();
 	    return true;
 	} else if (oldChild === this.power) {
 	    this.power = newChild;
 	    newChild.setRelations(this, this.arg, null, true);
+	    oldChild.setRelations();
 	    return true;
 	}
 	return false;
@@ -1096,6 +1183,7 @@ var TrigFunction = {
 	    return this.parent.removeChild(this);
 	} else if (child === this.power) {
 	    this.power = undefined;
+	    child.setRelations();
 	}
 	return null;
     }
@@ -1166,6 +1254,7 @@ var Matrix = {
 	return this.findChild(oldChild, function (row, i, item, j) {
 	    newChild.setRelations(self, item.previousSibling, item.nextSibling, true);
 	    row[j] = newChild;
+	    oldChild.setRelations();
 	});
     },
     removeChild: function (child) {
@@ -1189,6 +1278,7 @@ var Matrix = {
 	    } else {
 		next.setPreviousSibling(prev, true);
 	    }
+	    child.setRelations();
 	    return null;
 	});
     },

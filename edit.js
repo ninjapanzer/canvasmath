@@ -33,7 +33,10 @@ var operations = {
 	if (e.__proto__ === Op && !e.isGroup) {
 	    e.insertAfter(e.lastChild, rhs);
 	} else {
-	    e.parent.replaceChild(e, Op.instanciate(e.copy(), rhs));
+	    var p = e.parent;
+	    var s = Op.instanciate(e.copy(), rhs);
+	    e.parent.replaceChild(e, s);
+	    console.log(s, p, Op, rhs);
 	}
 	return rhs;
     },
