@@ -59,9 +59,7 @@ var Selection = Prototype.specialise({
 	}
 	newParent = this.expr.parent;
 	if (this.isSlice) {
-	    if (this.start && this.start.previousSibling) {
-		this.expr.removeSlice(this);
-	    }
+	    this.expr.removeSlice(this);
 	} else {
 	    newParent = this.expr.parent.removeChild(this.expr) || newParent;
 	}

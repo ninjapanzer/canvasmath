@@ -756,6 +756,7 @@ var VarLenOperation = {
 	var len = operands.length;
 	var i = slice.start ? operands.indexOf(slice.start) : 0;
 	var j = slice.stop ? operands.indexOf(slice.stop) : len;
+	console.log("i, j", i, j);
 	var sliceLen = j - i;
 	switch (len - sliceLen) {
 	    case 0:
@@ -763,7 +764,7 @@ var VarLenOperation = {
 		return true;
 	    case 1:
 		if (!this.oneOperandPossible) {
-		    this.parent.replaceChild(this, operands[i && j - 1]);
+		    this.parent.replaceChild(this, operands[i ? 0 : j]);
 		    return true;
 		}
 	    default:
