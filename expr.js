@@ -1074,7 +1074,7 @@ var Fraction = {
     layout: function (layout) {
 	var line = layout.hline(null, 1);
 	var vspace = layout.vspace(2);
-	var hspace = layout.hspace(2);
+	var hspace = layout.hspace(4);
 	var den = layout.train([hspace, layout.ofExpr(this.den), hspace]);
 	var num = layout.train([hspace, layout.ofExpr(this.num), hspace]);
 	var stack = layout.stack([den, vspace, line, vspace, num], 1);
