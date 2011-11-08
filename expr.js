@@ -369,27 +369,30 @@ var FixedChildrenExpression = {
     },
     removeChild: function (child) {
 	var self = this;
-	var newSelf = null;
 	var nonEmptyChildCount = 0;
 	var nonEmptyChild = null;
         this.childProperties.forEach(function (prop) {
-	    var child = self[prop];
-            if (child && !(child.isEditExpr && child.isEmpty())) {
+	    var ch = self[prop];
+            if (ch !== child && ch && !(ch.isEditExpr && ch.isEmpty())) {
 		nonEmptyChildCount++;
-		nonEmptyChild = child;
+		nonEmptyChild = ch;
 	    }
 	});
 	var i = child.parentIndex;
 	var prop = this.childProperties[i];
 	if (self.optionalProperties[prop]) {
 	    self[prop] = null;
+	    child.setRelations();
+	    return null;
+	} else if (nonEmptyChildCount > 1) {
+	    this.replaceChild(child, EditExpr());
+	    return null;
+	} else if (nonEmptyChildCount == 1) {
+	    this.parent.replaceChild(this, nonEmptyChild);
+	    return nonEmptyChild;
+	} else {
+	    return this.parent.removeChild(this);
 	}
-	if (nonEmptyChildCount <= 1) {
-	    newSelf = nonEmptyChildCount ? nonEmptyChild : child;
-	    self.parent.replaceChild(self, newSelf);
-	}
-	child.setRelations();
-	return newSelf;
     },
     getTopChild: function () {
 	var i, e;

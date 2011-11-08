@@ -53,20 +53,20 @@ var Selection = Prototype.specialise({
 	}
     },
     remove: function () {
-	var newExpr, newParent;
+	var newParent;
 	if (!this.expr) {
 	    return null;
 	}
+	newParent = this.expr.parent;
 	if (this.isSlice) {
-	    newExpr = this.start && this.start.previousSibling;
 	    if (this.start && this.start.previousSibling) {
 		this.expr.removeSlice(this);
 	    }
 	} else {
-	    newExpr = this.expr.previousSibling;
-	    newParent = this.expr.parent.removeChild(this.expr);
+	    newParent = this.expr.parent.removeChild(this.expr) || newParent;
 	}
 	this.reset({expr: null});
+	console.log(newParent);
 	return newParent;
     },
     copyToClipboard: function (clipboard) {
@@ -153,21 +153,7 @@ var Selection = Prototype.specialise({
 	var s;
 	if (!this.expr) {
 	    return;
-	}/* else if (this.stack.length > this.index + 1) {
-	    this.set(this.stack[++this.index]);
-	} else if (this.isSlice) {
-	    s = {expr: this.expr};
-	    this.stack.push(s);
-	    this.set(s);
-	    this.index++;
-	} else if (this.expr.parent.isRoot) {
-	    return;
-	} else {
-	    s = {expr: this.expr.parent};
-	    this.stack.push(s);
-	    this.set(s);
-	    this.index++;
-	}*/
+	}
 	this.reset({expr: this.expr.getVPredecessor()});
 	this.setEditing();
     },
@@ -175,39 +161,15 @@ var Selection = Prototype.specialise({
 	var s;
 	if (!this.expr) {
 	    return;
-	}/* else if (this.index > 0) {
-	    this.set(this.stack[--this.index]);
-	} else if (this.expr.firstChild) {
-	    s = {expr: this.expr.firstChild};
-	    this.stack.unshift(s);
-	    this.set(s);
-	}*/
+	}
 	this.reset({expr: this.expr.getVSuccessor()});
 	this.setEditing();
     },
     moveLeft: function () {
-	/*if (this.isSlice) {
-	    if (this.start && this.start.previousSibling) {
-		this.reset({expr: this.start.previousSibling});
-	    }
-	} else if (this.expr && this.expr.previousSibling) {
-	    this.reset({expr: this.expr.previousSibling});
-	} else {
-	    this.moveUp();
-	}*/
 	this.reset({expr: this.expr.getPredecessor2()});
 	this.setEditing();
     },
     moveRight: function () {
-	/*if (this.isSlice) {
-	    if (this.stop && this.stop.nextSibling) {
-		this.reset({expr: this.stop.nextSibling});
-	    }
-	} else if (this.expr && this.expr.nextSibling) {
-	    this.reset({expr: this.expr.nextSibling});
-	} else {
-	    return;
-	}*/
 	this.reset({expr: this.expr.getSuccessor2()});
 	this.setEditing();
     }
