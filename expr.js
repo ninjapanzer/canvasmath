@@ -851,6 +851,18 @@ var Equation = {
     __name__: "Equation",
     isProposition: true,
     isEquation: true,
+    fromSlice: function (slice) {
+	var op;
+	var operands = [];
+	for (op = slice.start; op !== slice.stop; op = op.nextSibling) {
+	    if (op == slice.start && op.isExprWithRelation) {
+		operands.push(op.child.copy());
+	    } else {
+		operands.push(op.copy());
+	    }
+	}
+	return this.__proto__.instanciate(operands);
+    },
     pushOp: function (layout, train, i, forceOp) {
 	var op;
 	var operand = this.operands[i];

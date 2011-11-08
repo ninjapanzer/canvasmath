@@ -289,7 +289,7 @@ var SimpleButton = Prototype.specialise({
 	if (selection.isEditing()) {
 	    e = parser.interpret(e);
 	    if (this.isPostfix && e.isEditExpr && e.isEmpty() && !e.operand) {
-		selection.reset({expr: this.getExpr(e)});
+		selection.reset({expr: this.getExpr(e).parent.firstChild});
 		selection.setEditing();
 	    } else {
 		e1 = parser.addChar(e, this.getInput(e));
