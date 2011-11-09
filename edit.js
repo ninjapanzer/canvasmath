@@ -452,7 +452,7 @@ var parser = {
 	// XXX
 	if (operations.priorityMode) {
 	    if (parent.isProduct && parent.parent.isTrigFunction) {
-		parent.removeChild(target);
+		parent = parent.removeChild(target) || parent;
 		operations.mult(parent.parent, func);
 		return arg;
 	    }
