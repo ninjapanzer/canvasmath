@@ -674,6 +674,42 @@ var ColorBox = {
 };
 ColorBox = Box.specialise(ColorBox);
 
+var Cursor = {
+    __name__: "Cursor",
+    __init__: function (box) {
+	this.box = box;
+	this.calculate();
+    },
+    calculate: function () {
+	this.width = this.box.width;
+	this.height = this.box.height;
+	this.ascent = this.box.ascent;
+	this.descent = this.box.descent;
+    },
+    drawOnCanvas: function (ctx, x, y) {
+	this.box.drawOnCanvas(ctx, x, y);
+	ctx.save();
+	ctx.strokeStyle = "red";
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.moveTo(x + this.width, y - this.ascent);
+	ctx.lineTo(x + this.width, y - this.descent);
+	ctx.stroke();
+	ctx.beginPath();
+	ctx.strokeStyle = "gray";
+	ctx.moveTo(x + 4, y - this.ascent);
+	ctx.lineTo(x, y - this.ascent);
+	ctx.lineTo(x, y - this.descent);
+	ctx.lineTo(x + 4, y - this.descent);
+	ctx.stroke();
+	ctx.restore();
+    },
+    pushSubContainers: function (containers, x, y) {
+	this.box.pushContainers(containers, x, y);
+    }    
+}
+Cursor = Box.specialise(Cursor);
+
 var Frame = {
     __name__: "Frame",
     __init__: function (style, box) {

@@ -397,7 +397,7 @@ var Keywords = Prototype.specialise({
 	var wordlen = word.length;
 	var longestPrefix = null;
 	this.list.forEach(function (item) {
-	    if (word.length < item.kw.length && !item.kw.lastIndexOf(word, 0)) {
+	    if (word.length <= item.kw.length && !item.kw.lastIndexOf(word, 0)) {
 		completions.push(item.kw.substr(wordlen));
 	    }
 	    if (!word.lastIndexOf(item.kw, 0) && item.kw.length > maxlen) {

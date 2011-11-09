@@ -90,7 +90,10 @@ var Selection = Prototype.specialise({
 	if (this.isEditing()) {
 	    this.reset({expr: parser.interpret(this.expr)});
 	}
+	// XXX Does not always work.
 	this.replace(expr);
+	this.reset({expr: expr});
+	this.setEditing();
     },
     layout: function (layout) {
 	if (this.isSlice) {
@@ -373,12 +376,6 @@ var testOnLoad = function () {
     });
     initBox();
     var ctx = $("testcvs").getContext("2d");
-    /*var e = root(sum(
-	br(frac(prod(-3, 45), sum(1, 2, 3))),
-	prod(-2, -3, "x", "y", "z"),
-	frac(-12, 34)
-    ));
-    posexprs.add(e, 20, 100);*/
     var drawExprs = function () {
 	ctx.clearRect(0, 0, 800, 400);
 	posexprs.drawOnCanvas(ctx);
@@ -391,15 +388,23 @@ var testOnLoad = function () {
 	}
 	switch (e.keyIdentifier) {
 	    case "Up":
+		e.preventDefault();
+		e.stopPropagation();
 		selection.moveUp();
 		break;
 	    case "Down":
+		e.preventDefault();
+		e.stopPropagation();
 		selection.moveDown();
 		break;
 	    case "Left":
+		e.preventDefault();
+		e.stopPropagation();
 		selection.moveLeft();
 		break;
 	    case "Right":
+		e.preventDefault();
+		e.stopPropagation();
 		selection.moveRight();
 		break;
 	    case "U+0008": // Backspace
@@ -435,6 +440,8 @@ var testOnLoad = function () {
 		    selection.expr.cycleCompletions();
 		}
 		break;
+	    default:
+		return;
 	}
 	drawExprs();
     }, false);

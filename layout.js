@@ -8,8 +8,9 @@ var layout = {
     },
     select: function (l, editing) {
 	if (editing) {
-	    l = this.frame({background: "#DDDDDD"}, l);
-	    return this.lrEnclosure(l, "", "|", "red");
+	    return this.cursor(l);
+	    /*l = this.frame({background: "#DDDDDD"}, l);
+	    return this.lrEnclosure(l, "", "|", "red");*/
 	} else {
 	    return this.frame({background: "#AAFFAA"}, l);
 	}
@@ -59,6 +60,9 @@ var layout = {
     },
     color: function (color, elem) {
 	return LColor.instanciate(color, elem);
+    },
+    cursor: function (elem) {
+	return LCursor.instanciate(elem);
     },
     frame: function (style, elem) {
 	return LFrame.instanciate(style, elem);
@@ -317,6 +321,20 @@ var LColor = {
     }
 };
 LColor = Layout.specialise(LColor);
+
+var LCursor = {
+    __name__: "LCursor",
+    __init__: function (elem) {
+	this.elem = elem;
+    },
+    box: function () {
+	var box = this.elem.box();
+	var cbox = Cursor.instanciate(box);
+	cbox.bindLayout(this);
+	return cbox;
+    }
+};
+LCursor = Layout.specialise(LCursor);
 
 var LFrame = {
     __name__: "LFrame",

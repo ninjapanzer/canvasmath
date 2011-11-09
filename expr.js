@@ -104,9 +104,6 @@ var expr = {
     equation: function (ops) {
 	return Equation.instanciate(ops);
     },
-    nocopy: function () {
-	return NoCopyExpression.instanciate();
-    },
     drawOnNewCanvas: function (e) {
 	var box = layout.ofExpr(e).box();
 	var canvas = $.make("canvas", {
@@ -157,6 +154,17 @@ var Expression = {
 	this.parent = parent;
 	this.setNextSibling(next, reciprocate);
 	this.setPreviousSibling(prev, reciprocate);
+    },
+    removeFromSiblings: function () {
+	if (this.previousSibling) {
+	    this.previousSibling.nextSibling = this.nextSibling;
+	}
+	if (this.nextSibling) {
+	    this.nextSibling.previousSibling = this.previousSibling;
+	}
+	this.parent = null;
+	this.nextSibling = null;
+	this.previousSibling = null;
     },
     getSelection: function (expr) {
 	var a, b, i;
@@ -266,14 +274,16 @@ var Expression = {
 	return this.parent.getNextChildDown(this);
     },
     getNextChildUp: function (child) {
+	return child.previousSibling;
     },
     getNextChildDown: function (child) {
+	return child.nextSibling;
     },
     getTopChild: function () {
-	return this.lastChild;
+	return this.firstChild;
     },
     getBottomChild: function () {
-	return this.firstChild;
+	return this.lastChild;
     },
     getPreviousLeaf: function () {
 	// Unused
@@ -382,7 +392,7 @@ var FixedChildrenExpression = {
 	var prop = this.childProperties[i];
 	if (self.optionalProperties[prop]) {
 	    self[prop] = null;
-	    child.setRelations();
+	    child.removeFromSibling();
 	    return null;
 	} else if (nonEmptyChildCount > 1) {
 	    this.replaceChild(child, EditExpr());
@@ -462,14 +472,14 @@ var OneChildExpression = {
 	    return true;
 	}
 	return false;
-    }/*,
+    },
     removeChild: function (child) {
 	if (this.child === child) {
 	    return this.parent.removeChild(this);
 	} else {
-	    return false;
+	    return null;
 	}
-    }*/
+    }
 };
 OneChildExpression = Expression.specialise(OneChildExpression);
 
@@ -518,23 +528,6 @@ var Number_ = {
 };
 Number_ = Expression.specialise(Number_);
 
-var NoCopyExpression = {
-    __name__: "Dummy",
-    layout: function (layout) {
-	return layout.text("[nocopy]");
-    },
-    copy: function () {
-	var prop;
-	for (prop in this) {
-	    if (this.hasOwnProperty(prop)) {
-		delete this[prop];
-	    }
-	}
-	return this;
-    }
-};
-NoCopyExpression = Expression.specialise(NoCopyExpression);
-
 var Parameter = {
     __name__: "Parameter",
     __init__: function (name, value) {
@@ -567,18 +560,6 @@ var Subscript = {
 	);
 	l.bindExpr(this);
 	return l;
-    },
-    getNextChildUp: function (child) {
-	if (child === this.subscript) {
-	    return this.base;
-	}
-	return null;
-    },
-    getNextChildDown: function (child) {
-	if (child === this.base) {
-	    return this.subscript;
-	}
-	return null;
     }
 };
 Subscript = FixedChildrenExpression.specialise(Subscript);
@@ -643,8 +624,8 @@ var Bracket = {
     layout: function (layout) {
 	var lbracket;
 	var lexpr = layout.ofExpr(this.expr);
-	// lbracket = layout.bracket(lexpr, "red");
-	lbracket = layout.frame({border: "red", width: 1}, lexpr);
+	lbracket = layout.bracket(lexpr, "red");
+	// lbracket = layout.frame({border: "red", width: 1}, lexpr);
 	lbracket.bindExpr(this);
 	return lbracket;
     }
@@ -756,7 +737,6 @@ var VarLenOperation = {
 	var len = operands.length;
 	var i = slice.start ? operands.indexOf(slice.start) : 0;
 	var j = slice.stop ? operands.indexOf(slice.stop) : len;
-	console.log("i, j", i, j);
 	var sliceLen = j - i;
 	switch (len - sliceLen) {
 	    case 0:
@@ -1102,10 +1082,10 @@ var Sqrt = {
     __init__: function (expr, nth) {
 	this.expr = expr;
 	this.nth = nth;
-	expr.setRelations(this, null, nth);
 	if (nth) {
-	    nth.setRelations(this, expr);
+	    nth.setRelations(this, null, expr);
 	}
+	expr.setRelations(this, nth, null);
     },
     layout: function (layout) {
 	var l = layout.ofExpr(this.expr);
@@ -1120,17 +1100,32 @@ var Sqrt = {
     replaceChild: function (oldChild, newChild) {
 	if (oldChild === this.expr) {
 	    this.expr = newChild;
-	    newChild.setRelations(this, null, this.nth);
+	    newChild.setRelations(this, this.nth, null, true);
 	    oldChild.setRelations();
 	    return true;
 	} else if (oldChild === this.nth) {
 	    this.nth = newChild;
-	    newChild.setRelations(this, this.expr, null);
+	    newChild.setRelations(this, null, this.expr, true);
 	    oldChild.setRelations();
 	    return true;
 	}
 	return false;
-    }
+    },
+    removeChild: function (child) {
+	if (child === this.nth) {
+	    this.parent.replaceChild(this, this.expr);
+	    return this.parent;
+	} else if (child === this.expr) {
+	    if (this.nth) {
+		this.parent.replaceChild(this, this.nth);
+		return this.parent;
+	    } else {
+		return this.parent.removeChild(this);
+	    }
+	} else {
+	    return null;
+	}
+    }	
 };
 Sqrt = Expression.specialise(Sqrt);
 
@@ -1143,7 +1138,7 @@ var TrigFunction = {
 	this.power = power;
 	this.arg.setRelations(this);
 	if (power) {
-	    this.power.setRelations(this, arg, null, true);
+	    this.power.setRelations(this, null, arg, true);
 	}
     },
     subLayout: function (layout, subexpr) {
@@ -1183,13 +1178,13 @@ var TrigFunction = {
     replaceChild: function (oldChild, newChild) {
 	if (oldChild === this.arg) {
 	    this.arg = newChild;
-	    newChild.setRelations(this, null, this.power, true);
 	    oldChild.setRelations();
+	    newChild.setRelations(this, this.power, null, true);
 	    return true;
 	} else if (oldChild === this.power) {
 	    this.power = newChild;
-	    newChild.setRelations(this, this.arg, null, true);
 	    oldChild.setRelations();
+	    newChild.setRelations(this, null, this.arg, true);
 	    return true;
 	}
 	return false;
@@ -1199,9 +1194,30 @@ var TrigFunction = {
 	    return this.parent.removeChild(this);
 	} else if (child === this.power) {
 	    this.power = undefined;
+	    this.arg.setRelations(this);
 	    child.setRelations();
 	}
 	return null;
+    },
+    getTopChild: function () {
+	return this.power || this.arg;
+    },
+    getBottomChild: function () {
+	return this.arg;
+    },
+    getNextChildUp: function (child) {
+	if (child === this.arg) {
+	    return this.power;
+	} else {
+	    return null;
+	}
+    },
+    getNextChildDown: function (child) {
+	if (child === this.power) {
+	    return this.arg;
+	} else {
+	    return null;
+	}
     }
 };
 TrigFunction = Expression.specialise(TrigFunction);
@@ -1402,7 +1418,8 @@ var EditExpr = {
 	} else {
 	    return "";
 	}
-    }
+    },
+    needsFactorSeparator: true
 };
 EditExpr = Expression.specialise(EditExpr);
 

@@ -40,8 +40,7 @@ var nonMathMLTests = [
 window.addEventListener("load", function () {
     var tbody = $("tests");
     var showTest = function (test, nonMathML) {
-	console.log(test, nonMathML);
-	var e = editor.parse(test);
+	var e = parser.parse(test);
 	// The following doesn't recognise entities such as &alpha;
 	// (and also I don't know if IE9 supports it)
 	/*
