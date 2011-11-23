@@ -1,121 +1,18 @@
-var expr = {
-    number: function (n) {
-	return Number_.instanciate(n);
-    },
-    parameter: function (name, value) {
-	return Parameter.instanciate(name, value);
-    },
-    subscript: function (base, subscript) {
-	return Subscript.instanciate(base, subscript);
-    },
-    neg: function (x) {
-	return Negation.instanciate(x);
-    },
-    plusMinus: function (x) {
-	return PlusMinus.instanciate(x);
-    },
-    minusPlus: function (x) {
-	return MinusPlus.instanciate(x);
-    },
-    not: function (x) {
-	return Not.instanciate(x);
-    },
-    brackets: function (x) {
-	return Bracket.instanciate(x);
-    },
-    sum: function (terms) {
-	return Sum.instanciate(terms);
-    },
-    argumentList: function (args) {
-	return ArgumentList.instanciate(args);
-    },
-    applyFunction: function (f, arglist) {
-	return FunctionApplication.instanciate(f, arglist);
-    },
-    product: function (factors) {
-	return Product.instanciate(factors);
-    },
-    conjunction: function (props) {
-	return Conjunction.instanciate(props);
-    },
-    disjunction: function (props) {
-	return Disjunction.instanciate(props);
-    },
-    conditionalExpression: function (expr, cond) {
-	return ConditionalExpression.instanciate(expr, cond);
-    },
-    piecewise: function (pieces) {
-	return Piecewise.instanciate(pieces);
-    },
-    power: function (x, y) {
-	return Power.instanciate(x, y);
-    },
-    fraction: function (x, y) {
-	return Fraction.instanciate(x, y);
-    },
-    editExpr: function (content, operand) {
-	return EditExpr.instanciate(content, operand);
-    },
-    root: function (e) {
-	return RootExpression.instanciate(e);
-    },
-    sqrt: function (e, nth) {
-	return Sqrt.instanciate(e, nth);
-    },
-    abs: function (e) {
-	return Abs.instanciate(e);
-    },
-    ceiling: function (e) {
-	return Ceiling.instanciate(e);
-    },
-    conjugate: function (e) {
-	return Conjugate.instanciate(e);
-    },
-    factorial: function (e) {
-	return Factorial.instanciate(e);
-    },
-    floor: function (e) {
-	return Floor.instanciate(e);
-    },
-    trigFunction: function (name, e, pow) {
-	return TrigFunction.instanciate(name, e, pow);
-    },
-    matrix: function (array) {
-	return Matrix.instanciate(array);
-    },
-    sumOf: function (e, from, to) {
-	return SumOf.instanciate(e, from, to);
-    },
-    productOf: function (e, from, to) {
-	return ProductOf.instanciate(e, from, to);
-    },
-    integralOf: function (e, from, to) {
-	return IntegralOf.instanciate(e, from, to);
-    },
-    differential: function (e) {
-	return Differential.instanciate(e);
-    },
-    derivative: function (e, v) {
-	return Derivative.instanciate(e, v);
-    },
-    exprWithRelation: function (e, r) {
-	return ExprWithRelation.instanciate(e, r);
-    },
-    equation: function (ops) {
-	return Equation.instanciate(ops);
-    },
-    drawOnNewCanvas: function (e) {
-	var box = layout.ofExpr(e).box();
-	var canvas = $.make("canvas", {
-	    width: box.width + 2, // +2 is for IE9...
-	    height: box.height + 1,
-	    style: "vertical-align: " + box.descent + "px;"
-	});
-	var ctx = canvas.getContext("2d");
-	box.drawOnCanvas(ctx, 0.5, box.ascent + 0.5);
-	return canvas;
-    }
-};
+if (window.cvm === undefined) {
+    cvm = {};
+}
+
+(function (cvm) {
+
+if (cvm.expr !== undefined) {
+    return;
+}
+
+var operators = cvm.operators;
+
+if (operators === undefined) {
+    throw "operators must be loaded";
+}
 
 var Expression = {
     __name__: "Expression",
@@ -329,7 +226,9 @@ var Expression = {
 	    p.containsSelection = false;
 	}*/
     },
-    needsFactorSeparator: false,
+    needsFactorSeparator: function () {
+	return false;
+    },
     sumSeparator: operators.infix.plus,
     getSumExpression: function () {
 	return this;
@@ -524,7 +423,9 @@ var Number_ = {
     copy: function () {
 	return expr.number(this.value);
     },
-    needsFactorSeparator: true
+    needsFactorSeparator: function () {
+	return true;
+    }
 };
 Number_ = Expression.specialise(Number_);
 
@@ -883,7 +784,7 @@ var Product = {
     pushOp: function (layout, train, i, forceOp) {
 	var op;
 	var factor = this.operands[i];
-	if (i && (factor.needsFactorSeparator)) {
+	if (i && (factor.needsFactorSeparator())) {
 	    op = operators.infix.times.layout(layout);
 	    train.push(op);
 	    op.bindExpr(this, i);
@@ -1037,14 +938,12 @@ var Power = {
 	var ls = layout.superscript(bLayout, layout.scale(pLayout, 0.8));
 	ls.bindExpr(this);
 	return ls;
+    },
+    needsFactorSeparator: function () {
+	return this.base.needsFactorSeparator();
     }
 };
 Power = FixedChildrenExpression.specialise(Power);
-Object.defineProperty(Power, "needsFactorSeparator", {
-    get: function () {
-	return this.base.needsFactorSeparator;
-    }
-});
 
 var Fraction = {
     __name__: "Fraction",
@@ -1071,7 +970,9 @@ var Fraction = {
 	}
 	return layout.raise(4, stack);
     },
-    needsFactorSeparator: true
+    needsFactorSeparator: function () {
+	return true;
+    }
 };
 Fraction = FixedChildrenExpression.specialise(Fraction);
 
@@ -1353,7 +1254,9 @@ var Matrix = {
 	});
 	return next;
     },
-    needsFactorSeparator: true
+    needsFactorSeparator: function () {
+	return true;
+    }
 };
 Matrix = Expression.specialise(Matrix);
 			  
@@ -1419,7 +1322,12 @@ var EditExpr = {
 	    return "";
 	}
     },
-    needsFactorSeparator: true
+    needsFactorSeparator: function () {
+	if (this.operand) {
+	    return this.operand.needsFactorSeparator();
+	}
+	return /^\d/.test(this.content);
+    }
 };
 EditExpr = Expression.specialise(EditExpr);
 
@@ -1507,12 +1415,18 @@ var OpOf = {
 	return ltrain;
     },
     setFrom: function (newFrom) {
+	if (this.from) {
+	    this.from.setRelations();
+	}
 	this.from = newFrom;
-	newFrom.setRelations(this, this.arg, this.to);
+	newFrom.setRelations(this, this.arg, this.to, true);
     },
     setTo: function (newTo) {
+	if (this.to) {
+	    this.to.setRelations();
+	}
 	this.to = newTo;
-	newTo.setRelations(this, this.arg, this.to);
+	newTo.setRelations(this, this.from, null, true);
     }
 };
 OpOf = FixedChildrenExpression.specialise(OpOf);
@@ -1620,3 +1534,157 @@ var priorities = [
 priorities.forEach(function (pl) {
     pl[0].priority = pl[1];
 });
+
+cvm.expr = {
+    Number: Number_,
+    Parameter: Parameter,
+    EditExpr: EditExpr,
+    Bracket: Bracket,
+    Subscript: Subscript,
+    FunctionApplication: FunctionApplication,
+    Derivative: Derivative,
+    Not: Not,
+    Factorial: Factorial,
+    Differential: Differential,
+    Sqrt: Sqrt,
+    Abs: Abs,
+    Ceiling: Ceiling,
+    Floor: Floor,
+    Conjugate: Conjugate,
+    Power: Power,
+    Fraction: Fraction,
+    Product: Product,
+    SumOf: SumOf,
+    ProductOf: ProductOf,
+    IntegralOf: IntegralOf,
+    TrigFunction: TrigFunction,
+    Negation: Negation,
+    Sum: Sum,
+    Matrix: Matrix,
+    ExprWithRelation: ExprWithRelation,
+    Equation: Equation,
+    ConditionalExpression: ConditionalExpression,
+    Piecewise: Piecewise,
+    Conjunction: Conjunction,
+    Disjunction: Disjunction,
+
+    number: function (n) {
+	return Number_.instanciate(n);
+    },
+    parameter: function (name, value) {
+	return Parameter.instanciate(name, value);
+    },
+    subscript: function (base, subscript) {
+	return Subscript.instanciate(base, subscript);
+    },
+    neg: function (x) {
+	return Negation.instanciate(x);
+    },
+    plusMinus: function (x) {
+	return PlusMinus.instanciate(x);
+    },
+    minusPlus: function (x) {
+	return MinusPlus.instanciate(x);
+    },
+    not: function (x) {
+	return Not.instanciate(x);
+    },
+    brackets: function (x) {
+	return Bracket.instanciate(x);
+    },
+    sum: function (terms) {
+	return Sum.instanciate(terms);
+    },
+    argumentList: function (args) {
+	return ArgumentList.instanciate(args);
+    },
+    applyFunction: function (f, arglist) {
+	return FunctionApplication.instanciate(f, arglist);
+    },
+    product: function (factors) {
+	return Product.instanciate(factors);
+    },
+    conjunction: function (props) {
+	return Conjunction.instanciate(props);
+    },
+    disjunction: function (props) {
+	return Disjunction.instanciate(props);
+    },
+    conditionalExpression: function (expr, cond) {
+	return ConditionalExpression.instanciate(expr, cond);
+    },
+    piecewise: function (pieces) {
+	return Piecewise.instanciate(pieces);
+    },
+    power: function (x, y) {
+	return Power.instanciate(x, y);
+    },
+    fraction: function (x, y) {
+	return Fraction.instanciate(x, y);
+    },
+    editExpr: function (content, operand) {
+	return EditExpr.instanciate(content, operand);
+    },
+    root: function (e) {
+	return RootExpression.instanciate(e);
+    },
+    sqrt: function (e, nth) {
+	return Sqrt.instanciate(e, nth);
+    },
+    abs: function (e) {
+	return Abs.instanciate(e);
+    },
+    ceiling: function (e) {
+	return Ceiling.instanciate(e);
+    },
+    conjugate: function (e) {
+	return Conjugate.instanciate(e);
+    },
+    factorial: function (e) {
+	return Factorial.instanciate(e);
+    },
+    floor: function (e) {
+	return Floor.instanciate(e);
+    },
+    trigFunction: function (name, e, pow) {
+	return TrigFunction.instanciate(name, e, pow);
+    },
+    matrix: function (array) {
+	return Matrix.instanciate(array);
+    },
+    sumOf: function (e, from, to) {
+	return SumOf.instanciate(e, from, to);
+    },
+    productOf: function (e, from, to) {
+	return ProductOf.instanciate(e, from, to);
+    },
+    integralOf: function (e, from, to) {
+	return IntegralOf.instanciate(e, from, to);
+    },
+    differential: function (e) {
+	return Differential.instanciate(e);
+    },
+    derivative: function (e, v) {
+	return Derivative.instanciate(e, v);
+    },
+    exprWithRelation: function (e, r) {
+	return ExprWithRelation.instanciate(e, r);
+    },
+    equation: function (ops) {
+	return Equation.instanciate(ops);
+    },
+    drawOnNewCanvas: function (e) {
+	var box = layout.ofExpr(e).box();
+	var canvas = $("<canvas/>", {
+	    width: box.width + 2, // +2 is for IE9...
+	    height: box.height + 1,
+	    style: "vertical-align: " + box.descent + "px;"
+	})[0];
+	var ctx = canvas.getContext("2d");
+	box.drawOnCanvas(ctx, 0.5, box.ascent + 0.5);
+	return canvas;
+    }
+};
+
+
+})(cvm);

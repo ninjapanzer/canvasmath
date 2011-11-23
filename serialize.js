@@ -618,7 +618,6 @@ var MathMLSerializer = {
     Piecewise: function (e) {
 	var self = this;
 	var pieces = e.operands.map(function (piece) {
-	    console.log(piece);
 	    if (piece.isConditionalExpression) {
 		return {
 		    tag: "piece",

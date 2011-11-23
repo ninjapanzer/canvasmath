@@ -62,25 +62,11 @@ var Prototype = {
 };
 
 var getEventCoords = function (e, element) {
-    // From Dive into HTML5 by Mark Pilgrim
-    var x;
-    var y;
-    if (e.pageX || e.pageY) {
-	x = e.pageX;
-	y = e.pageY;
-    }
-    else {
-	x = e.clientX + document.body.scrollLeft +
-	    document.documentElement.scrollLeft;
-	y = e.clientY + document.body.scrollTop +
-	    document.documentElement.scrollTop;
-    }
-    // Convert to coordinates relative to the elements
-    if (element) {
-	x -= element.offsetLeft;
-	y -= element.offsetTop;
-    }
-    return {x: x, y: y};
+    var offset = $(element).offset();
+    return {
+	x: e.pageX - offset.left,
+	y: e.pageY - offset.top
+    };
 };
 
 var PlatformInfo = {
@@ -189,32 +175,38 @@ Object.forEachItem = function (obj, f) {
     return true;
 };
 
-function $(x) {
-    if (typeof x === "string") {
-	return document.getElementById(x);
-    } else {
-	return x;
-    }
-}
-
-$.make = function (name) {
-    var i = 1;
-    var arg;
-    var el = document.createElement(name);
-    if (arguments.length > 1 && typeof arguments[1] === "object" && !(arguments[1] instanceof HTMLElement)) {
-	Object.forEachItem(arguments[1], function(attr, val) {
-	    el.setAttribute(attr, val);
-	});
-	i = 2;
-    }
-    for (; i < arguments.length; i++) {
-	arg = arguments[i];
-	if (typeof arg === "string") {
-	    arg = document.createTextNode(arg);
-	}
-	if (arg) {
-	    el.appendChild(arg);
-	}
-    }
-    return el;
+// Taken from jquery.ui.core.js
+var KEY = {
+    ALT: 18,
+    BACKSPACE: 8,
+    CAPS_LOCK: 20,
+    COMMA: 188,
+    COMMAND: 91,
+    COMMAND_LEFT: 91, // COMMAND
+    COMMAND_RIGHT: 93,
+    CONTROL: 17,
+    DELETE: 46,
+    DOWN: 40,
+    END: 35,
+    ENTER: 13,
+    ESCAPE: 27,
+    HOME: 36,
+    INSERT: 45,
+    LEFT: 37,
+    MENU: 93, // COMMAND_RIGHT
+    NUMPAD_ADD: 107,
+    NUMPAD_DECIMAL: 110,
+    NUMPAD_DIVIDE: 111,
+    NUMPAD_ENTER: 108,
+    NUMPAD_MULTIPLY: 106,
+    NUMPAD_SUBTRACT: 109,
+    PAGE_DOWN: 34,
+    PAGE_UP: 33,
+    PERIOD: 190,
+    RIGHT: 39,
+    SHIFT: 16,
+    SPACE: 32,
+    TAB: 9,
+    UP: 38,
+    WINDOWS: 91 // COMMAND
 };

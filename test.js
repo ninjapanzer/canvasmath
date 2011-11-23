@@ -1,3 +1,8 @@
+var parser = cvm.edit.parser;
+var operations = cvm.edit.operations;
+var expr = cvm.expr;
+var layout = cvm.layout;
+
 var forEachBinding = function (box, x, y, callback) {
     box.getContainers(x, y).forEach(function (c) {
 	if (!c.box.boundLayouts) {
@@ -64,7 +69,6 @@ var Selection = Prototype.specialise({
 	    newParent = this.expr.parent.removeChild(this.expr) || newParent;
 	}
 	this.reset({expr: null});
-	console.log(newParent);
 	return newParent;
     },
     copyToClipboard: function (clipboard) {
@@ -135,15 +139,15 @@ var Selection = Prototype.specialise({
     },
     setEditing: function () {
 	if (!this.editing) {
-	    $("editor-buttons").className = "show";
-	    $("hi-editor-buttons").className = "hide";
+	    $("#editor-buttons").show();
+	    $("#hi-editor-buttons").hide();
 	}
 	this.editing = true;
     },
     clearEditing: function () {
 	if (this.editing) {
-	    $("hi-editor-buttons").className = "show";
-	    $("editor-buttons").className = "hide";
+	    $("hi-editor-buttons").show();
+	    $("editor-buttons").hide();
 	}
 	this.editing = false;
     },
@@ -256,7 +260,6 @@ var SimpleButton = Prototype.specialise({
 		selection.setEditing();
 	    } else {
 		e1 = parser.addChar(e, this.getInput(e));
-		//console.log(e, e1);
 		selection.reset({expr: e1});
 		selection.setEditing();
 	    }
@@ -328,7 +331,7 @@ var testOnLoad = function () {
     };
     Object.forEachItem(serializers, function (s) {
 	if (serializers.hasOwnProperty(s)) {
-	    $("serializer").appendChild($.make("option", {name: s}, s));
+	    $("#serializer").append($("<option/>", {name: s, text: s}));
 	}
     });
     var currentSerializer = serializers.Simple;
@@ -359,7 +362,7 @@ var testOnLoad = function () {
     var createShortcut = shortcuts.add('C-e', function (e) {
 	if (!mouseCoords) { return; };
 	var ed = expr.editExpr();
-	var newExpr = root(ed);
+	var newExpr = expr.root(ed);
 	e.preventDefault();
 	e.stopPropagation();
 	posexprs.add(newExpr, mouseCoords.x, mouseCoords.y);
@@ -371,43 +374,48 @@ var testOnLoad = function () {
 	e.preventDefault();
 	e.stopPropagation();
 	if (selection.expr) {
-	    $("serialization").value = currentSerializer.serialize(selection.expr);
+	    $("#serialization").val(currentSerializer.serialize(selection.expr));
 	}
     });
-    initBox();
-    var ctx = $("testcvs").getContext("2d");
+    cvm.box.init();
+    var ctx = $("#testcvs")[0].getContext("2d");
     var drawExprs = function () {
 	ctx.clearRect(0, 0, 800, 400);
 	posexprs.drawOnCanvas(ctx);
     };
+    var lastKeyDownIsShortcut = false;
     drawExprs();
-    window.addEventListener("keydown", function (e) {
+    $(window).keydown(function (e) {
 	var sel, s;
-	if (shortcuts.callFromEvent(e)) {
+	// This is for Firefox
+	lastKeyDownIsShortcut = shortcuts.callFromEvent(e);
+	if (lastKeyDownIsShortcut) {
+	    e.preventDefault();
+	    e.stopPropagation();
 	    return;
 	}
-	switch (e.keyIdentifier) {
-	    case "Up":
+	switch (e.which) {
+	    case KEY.UP:
 		e.preventDefault();
 		e.stopPropagation();
 		selection.moveUp();
 		break;
-	    case "Down":
+	    case KEY.DOWN:
 		e.preventDefault();
 		e.stopPropagation();
 		selection.moveDown();
 		break;
-	    case "Left":
+	    case KEY.LEFT:
 		e.preventDefault();
 		e.stopPropagation();
 		selection.moveLeft();
 		break;
-	    case "Right":
+	    case KEY.RIGHT:
 		e.preventDefault();
 		e.stopPropagation();
 		selection.moveRight();
 		break;
-	    case "U+0008": // Backspace
+	    case KEY.BACKSPACE: // Backspace
 		e.preventDefault();
 		e.stopPropagation();
 		if (selection.expr) {
@@ -433,7 +441,7 @@ var testOnLoad = function () {
 		    selection.setEditing();
 		}
 		break;
-	    case "U+0009": // Tab
+	    case KEY.TAB: // Tab
 		e.preventDefault();
 		e.stopPropagation();
 		if (selection.expr && selection.expr.isEditExpr) {
@@ -444,14 +452,19 @@ var testOnLoad = function () {
 		return;
 	}
 	drawExprs();
-    }, false);
-    window.addEventListener("keypress", function (e) {
+    });
+    $(window).keypress(function (e) {
 	var c;
-	if (!e.charCode) {
+	var charCode = e.which == 13 ? 13 : e.charCode;
+	// This is for Firefox
+	if (lastKeyDownIsShortcut) {
+	    return;
+	}
+	if (!charCode) {
 	    return;
 	}
 	// Input character
-	c = String.fromCharCode(e.charCode);
+	c = String.fromCharCode(charCode);
 	if (selection.isSlice) {
 	    var r = root(selection.expr.fromSlice(selection));
 	    var e2 = parser.addChar(r.firstChild, c);
@@ -464,8 +477,8 @@ var testOnLoad = function () {
 	}
 	selection.setEditing();
 	drawExprs();
-    }, false);
-    $("testcvs").addEventListener("mousedown", function (e) {
+    });
+    $("#testcvs").mousedown(function (e) {
 	var coords = getEventCoords(e, this);
 	var item = posexprs.findFirstAt(coords.x, coords.y);
 	var target = null;
@@ -479,11 +492,11 @@ var testOnLoad = function () {
 	selection.reset({expr: target});
 	selection.setEditing();
 	drawExprs();
-    }, false);
-    $("testcvs").addEventListener("mouseout", function (e) {
+    });
+    $("#testcvs").mouseout(function (e) {
 	mouseCoords = null;
-    }, false);
-    $("testcvs").addEventListener("mousemove", function (e) {
+    });
+    $("#testcvs").mousemove(function (e) {
 	var coords = mouseCoords = getEventCoords(e, this);
 	if (!mouseDownExpr) {
 	    return;
@@ -505,38 +518,39 @@ var testOnLoad = function () {
 	    selection.reset();
 	}
 	drawExprs();
-    }, false);
-    $("testcvs").addEventListener("mouseup", function (e) {
+    });
+    $("#testcvs").mouseup(function (e) {
 	mouseDownExpr = null;
-    }, false);
-    $("priority-mode").addEventListener("click", function (e) {
+    });
+    $("#priority-mode").click(function (e) {
 	operations.priorityMode = this.checked;
-    }, false);
-    operations.priorityMode = $("priority-mode").checked = false;
-    $("prefixkwlist").innerHTML = prefixKeywords.list.
-	map(function (x) { return x.kw; }).join(" ");
-    $("postfixkwlist").innerHTML = postfixKeywords.list.
-	map(function (x) { return x.kw; }).join(" ");
+    });
+    operations.priorityMode = false;
+    $("#priority-mode:checked").val(false);
+    $("#prefixkwlist").text(cvm.edit.prefixKeywords.list.
+	map(function (x) { return x.kw; }).join(" "));
+    $("#postfixkwlist").text(cvm.edit.postfixKeywords.list.
+	map(function (x) { return x.kw; }).join(" "));
 
     [
-	[createShortcut, "create-shortcut"],
-	[copyShortcut, "copy-shortcut"],
-	[pasteShortcut, "paste-shortcut"],
-	[cutShortcut, "cut-shortcut"],
-	[serializeShortcut, "serialize-shortcut"]
+	[createShortcut, "#create-shortcut"],
+	[copyShortcut, "#copy-shortcut"],
+	[pasteShortcut, "#paste-shortcut"],
+	[cutShortcut, "#cut-shortcut"],
+	[serializeShortcut, "#serialize-shortcut"]
     ].forEach(function (x) {
 	var id = x[1];
 	var sh = x[0];
-	$(id).innerHTML = sh.mods + sh.key;
+	$(id).html(sh.mods + sh.key);
     });
-    $("serializer").addEventListener("change", function (e) {
+    $("#serializer").change(function (e) {
 	currentSerializer = serializers[this.options[this.selectedIndex].value];
-    }, false);
-    $("serialize").addEventListener("click", function (e) {
+    });
+    $("#serialize").click(function (e) {
 	if (selection.expr) {
-	    $("serialization").value = currentSerializer.serialize(selection.expr);
+	    $("#serialization").val(currentSerializer.serialize(selection.expr));
 	}
-    }, false);
+    });
     [
 	["power-button", powerButton],
 	["subscript-button", subscriptButton],
@@ -553,7 +567,9 @@ var testOnLoad = function () {
 		drawExprs();
 	    }
 	}
-	$(id).addEventListener("click", listener);
-	$("hi-" + id).addEventListener("click", listener);
+	$("#"+id).click(listener);
+	$("#hi-" + id).click(listener);
     });
 };
+
+$(document).ready(testOnLoad);

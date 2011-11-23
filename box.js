@@ -1,3 +1,8 @@
+if (window.cvm === undefined) {
+    cvm = {};
+}
+
+(function (cvm) {
 
 var calibrationImg;
 var calibrationTxt;
@@ -904,3 +909,31 @@ var Table = {
     }
 };
 Table = Box.specialise(Table);
+
+cvm.box = {
+    Box: Box,
+    TextBox: TextBox,
+    Decoration: Decoration,
+    DecoratedBox: DecoratedBox,
+    Scale: Scale,
+    Train: Train,
+    Paren: Paren,
+    Paren2: Paren2,
+    CurlyBracket: CurlyBracket,
+    ElasticVBar: ElasticVBar,
+    ElasticBox: ElasticBox,
+    HSpace: HSpace,
+    VSpace: VSpace,
+    Stack: Stack,
+    HLine: HLine,
+    ColorBox: ColorBox,
+    Cursor: Cursor,
+    Frame: Frame,
+    RootSign: RootSign,
+    RaiseBox: RaiseBox,
+    Table: Table,
+    init: initBox,
+    getElasticBox: getElasticBox
+};
+
+})(cvm);

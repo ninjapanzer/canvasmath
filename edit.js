@@ -1,3 +1,16 @@
+if (window.cvm === undefined) {
+    cvm = {};
+}
+
+(function (cvm) {
+
+var expr = cvm.expr;
+
+if (cvm.expr === undefined) {
+    throw "expr module must be loaded";
+}
+
+
 var operations = {
     priorityMode: true,
     binop: function (Op, e, rhs) {
@@ -13,20 +26,22 @@ var operations = {
 		e = e.parent;
 	    }
 	} else {
-	    if (Op == Sum && e.parent.isProduct) {
+	    if (Op == expr.Sum && e.parent.isProduct) {
 		e = e.parent;
 	    }
-	    if (Op == Sum && e.parent.isPrefixOperation) {
+	    if (Op == expr.Sum && e.parent.isPrefixOperation) {
 		e = e.parent;
 	    }
 	}
 	// The next two lines are a hack to allow e.g. sin^2x to mean sin^2(x)
-	if (this.priorityMode && 
-	    Op === Product && e.parent.isTrigFunction && e === e.parent.power) {
+	if (
+		this.priorityMode && Op === expr.Product &&
+		e.parent.isTrigFunction && e === e.parent.power
+	   ) {
 	    e.parent.replaceChild(e.parent.arg, rhs);
 	} else // end of hack XXX
 	// Now a hack to allow sum from(i=1) to (n) (1/n)
-	if (this.priorityMode && Op === Product && e.parent.isOpOf && 
+	if (this.priorityMode && Op === expr.Product && e.parent.isOpOf && 
 		(e === e.parent.to || e === e.parent.from)) {
 	    e.parent.replaceChild(e.parent.arg, rhs);
 	} else // end of hack XXX
@@ -36,37 +51,36 @@ var operations = {
 	    var p = e.parent;
 	    var s = Op.instanciate(e.copy(), rhs);
 	    e.parent.replaceChild(e, s);
-	    console.log(s, p, Op, rhs);
 	}
 	return rhs;
     },
     add: function (e, rhs) {
-	return operations.binop(Sum, e, rhs);
+	return operations.binop(expr.Sum, e, rhs);
     },
     mult: function (e, rhs) {
-	return operations.binop(Product, e, rhs);
+	return operations.binop(expr.Product, e, rhs);
     },
     addRelation: function (rel) {
 	return function (e, rhs) {
 	    if (!rhs) {
 		rhs = expr.editExpr();
 	    }
-	    var relRhs = ExprWithRelation.instanciate(rhs, rel);
-	    operations.binop(Equation, e, relRhs);
+	    var relRhs = expr.ExprWithRelation.instanciate(rhs, rel);
+	    operations.binop(expr.Equation, e, relRhs);
 	    return rhs;
 	};
     },
     and: function (e, rhs) {
-	return operations.binop(Conjunction, e, rhs);
+	return operations.binop(expr.Conjunction, e, rhs);
     },
     or: function (e, rhs) {
-	return operations.binop(Disjunction, e, rhs);
+	return operations.binop(expr.Disjunction, e, rhs);
     },
     conditional: function (e, rhs) {
-	return operations.binop(ConditionalExpression, e, rhs);
+	return operations.binop(expr.ConditionalExpression, e, rhs);
     },
     piecewise: function (e, rhs) {
-	return operations.binop(Piecewise, e, rhs);
+	return operations.binop(expr.Piecewise, e, rhs);
     },
     multByBracket: function (e) {
 	var rhs = expr.editExpr();
@@ -96,7 +110,7 @@ var operations = {
 	var rhs = expr.editExpr();
 	if (operations.priorityMode) {
 	    while (!e.parent.isRoot && !e.parent.isBracket && 
-		e.parent.priority > Fraction.priority) {
+		e.parent.priority > expr.Fraction.priority) {
 		e = e.parent;
 	    }
 	}
@@ -276,65 +290,71 @@ var postfixUnaryOps = {
     "'": operations.differentiate
 };
 
+var greekLowercase = [
+    {name:"alpha", code:"\u03b1"},
+    {name:"beta", code:"\u03b2"},
+    {name:"gamma", code:"\u03b3"},
+    {name:"delta", code:"\u03b4"},
+    {name:"epsilon", code:"\u03b5"},
+    {name:"zeta", code:"\u03b6"},
+    {name:"eta", code:"\u03b7"},
+    {name:"theta", code:"\u03b8"},
+    {name:"iota", code:"\u03b9"},
+    {name:"kappa", code:"\u03ba"},
+    {name:"lambda", code:"\u03bb"},
+    {name:"mu", code:"\u03bc"},
+    {name:"nu", code:"\u03bd"},
+    {name:"xi", code:"\u03be"},
+    {name:"omicron", code:"\u03bf"},
+    {name:"pi", code:"\u03c0"},
+    {name:"rho", code:"\u03c1"},
+    {name:"sigma", code:"\u03c3"},
+    {name:"tau", code:"\u03c4"},
+    {name:"upsilon", code:"\u03c5"},
+    {name:"phi", code:"\u03c6"},
+    {name:"chi", code:"\u03c7"},
+    {name:"psi", code:"\u03c8"},
+    {name:"omega", code:"\u03c9"}
+];
+
+var greekUppercase = [
+    {name:"Alpha", code:"\u0391"},
+    {name:"Beta", code:"\u0392"},
+    {name:"Gamma", code:"\u0393"},
+    {name:"Delta", code:"\u0394"},
+    {name:"Epsilon", code:"\u0395"},
+    {name:"Zeta", code:"\u0396"},
+    {name:"Eta", code:"\u0397"},
+    {name:"Theta", code:"\u0398"},
+    {name:"Iota", code:"\u0399"},
+    {name:"Kappa", code:"\u039a"},
+    {name:"Lambda", code:"\u039b"},
+    {name:"Mu", code:"\u039c"},
+    {name:"Nu", code:"\u039d"},
+    {name:"Xi", code:"\u039e"},
+    {name:"Omicron", code:"\u039f"},
+    {name:"Pi", code:"\U03a0"},
+    {name:"Rho", code:"\U03a1"},
+    {name:"Sigma", code:"\u03a3"},
+    {name:"Tau", code:"\u03a4"},
+    {name:"Upsilon", code:"\u03a5"},
+    {name:"Phi", code:"\u03a6"},
+    {name:"Chi", code:"\u03a7"},
+    {name:"Psi", code:"\u03a8"},
+    {name:"Omega", code:"\u03a9"}
+];
+
 var constants = {
-    // Lowercase Greek letters
-    
-    alpha: "\u03b1",
-    beta: "\u03b2",
-    gamma: "\u03b3",
-    delta: "\u03b4",
-    epsilon: "\u03b5",
-    zeta: "\u03b6",
-    eta: "\u03b7",
-    theta: "\u03b8",
-    iota: "\u03b9",
-    kappa: "\u03ba",
-    lambda: "\u03bb",
-    mu: "\u03bc",
-    nu: "\u03bd",
-    xi: "\u03be",
-    omicron: "\u03bf",
-    pi: "\u03c0",
-    rho: "\u03c1",
-    sigma: "\u03c3",
-    tau: "\u03c4",
-    upsilon: "\u03c5",
-    phi: "\u03c6",
-    chi: "\u03c7",
-    psi: "\u03c8",
-    omega: "\u03c9",
-    
-    //Uppercase Greek letters
-    
-    Alpha: "\u0391",
-    Beta: "\u0392",
-    Gamma: "\u0393",
-    Delta: "\u0394",
-    Epsilon: "\u0395",
-    Zeta: "\u0396",
-    Eta: "\u0397",
-    Theta: "\u0398",
-    Iota: "\u0399",
-    Kappa: "\u039a",
-    Lambda: "\u039b",
-    Mu: "\u039c",
-    Nu: "\u039d",
-    Xi: "\u039e",
-    Omicron: "\u039f",
-    Pi: "\U03a0",
-    Rho: "\U03a1",
-    Sigma: "\u03a3",
-    Tau: "\u03a4",
-    Upsilon: "\u03a5",
-    Phi: "\u03a6",
-    Chi: "\u03a7",
-    Psi: "\u03a8",
-    Omega: "\u03a9",
-    
     // Exponential
 
     exp: "\u212f"
 };
+
+$.each([greekLowercase, greekUppercase], function (i, list) {
+    $.each(list, function (i, item) {
+	constants[item.name] = item.code;
+    });
+});
 
 var functions = {
 };
@@ -598,12 +618,17 @@ var parser = {
 	input = input.substr(1);
 	return this.interpret(target, input, ongoing);
     },
-    addChar: function (e, c) {
-	if (e.isEditExpr && c === "\r") { // XXX
+    confirmCompletion: function (e) {
+	if (e.isEditExpr) { // XXX
 	    if (e.getCurrentCompletion() !== null) {
 		return this.interpret(e, e.content + e.getCurrentCompletion());
 	    }
-	    return e;
+	}
+	return e;
+    },
+    addChar: function (e, c) {
+	if (c == "\r") { // XXX
+	    return this.confirmCompletion(e);
 	}
 	var input = e.isEditExpr ? e.content + c : c;
 	return this.interpret(e, input, true);
@@ -615,3 +640,12 @@ var parser = {
 	return root;
     }
 };
+
+cvm.edit = {
+    parser: parser,
+    operations: operations,
+    prefixKeywords: prefixKeywords,
+    postfixKeywords: postfixKeywords
+};
+
+})(cvm);

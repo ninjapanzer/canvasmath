@@ -1,3 +1,9 @@
+if (window.cvm === undefined) {
+    cvm = {};
+}
+
+(function (cvm) {
+
 var operators = {
     prefix: {},
     infix: {},
@@ -93,3 +99,7 @@ operators.addPrefix("integral", {
 	]);
     }
 });
+
+cvm.operators = operators;
+
+})(cvm);
