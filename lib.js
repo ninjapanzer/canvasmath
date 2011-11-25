@@ -22,7 +22,9 @@ var Prototype = {
 	if (spec) {
 	    for (var prop in spec) {
 		if (spec.hasOwnProperty(prop)) {
-		    var desc = Object.getOwnPropertyDescriptor(spec, prop);
+		    // Comment the following in order to be compatible with IE8
+		    // This means no more descriptors :(
+		    /*var desc = Object.getOwnPropertyDescriptor(spec, prop);
 		    var g = desc.get;
 		    var s = desc.set;
 		    if ( g || s ) {
@@ -32,9 +34,9 @@ var Prototype = {
 			if ( s )
 			    def.set = s;
 			Object.defineProperty(obj, prop, def);
-		    } else {
+		    } else {*/
 			obj[prop] = spec[prop];
-		    }
+		    //}
 		}
 	    }
 	}

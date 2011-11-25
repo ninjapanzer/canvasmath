@@ -79,6 +79,8 @@ var Box = {
 	    this.boundLayouts = [];
 	}
 	this.boundLayouts.push({layout: layout, key: key});
+    },
+    setStack: function (stack) {
     }
 };
 Box = Prototype.specialise(Box);
@@ -566,12 +568,12 @@ var Stack = {
     __init__: function (boxes, baseline, align) {
 	var self = this;
 	this.boxes = boxes;
-	boxes.forEach(function (box) {
-	    box.stack = self;
-	});
 	this.baseline = baseline || 0;
 	this.align = align || "center";
 	this.calculate();
+	boxes.forEach(function (box) {
+	    box.setStack(self);
+	});
     },
     calculate: function () {
 	var height = 0;
@@ -628,6 +630,7 @@ var HLine = {
     __name__: "HLine",
     __init__: function (width, height) {
 	this._width = width;
+        this.width = width | 0;
 	this.height = height || 1;
 	this.calculate();
     },
@@ -643,15 +646,21 @@ var HLine = {
 	ctx.fillStyle = "black";
 	ctx.fillRect(x, y - this.ascent, this.width, this.height);
 	ctx.restore();
+    },
+    setStack: function (stack) {
+	if (this._width === null) {
+	    this.width = stack.width;
+	}
     }
 };
 HLine = Box.specialise(HLine);
+/*
 // Instead of get width() for compatibility with IE9
 Object.defineProperty(HLine, "width", {
     get: function () {
 	return this._width || (this.stack && this.stack.width) || 0;
     }
-});
+});*/
 
 var ColorBox = {
     __name__: "ColorBox",
