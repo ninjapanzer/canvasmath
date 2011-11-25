@@ -378,7 +378,11 @@ var testOnLoad = function () {
 	}
     });
     cvm.box.init();
-    var ctx = $("#testcvs")[0].getContext("2d");
+    var _canvas = $("#testcvs")[0];
+    if (!_canvas.getContext) {
+	G_vmlCanvasManager.initElement(_canvas);	
+    }
+    var ctx = _canvas.getContext("2d");
     var drawExprs = function () {
 	ctx.clearRect(0, 0, 800, 400);
 	posexprs.drawOnCanvas(ctx);
@@ -455,7 +459,8 @@ var testOnLoad = function () {
     });
     $(window).keypress(function (e) {
 	var c;
-	var charCode = e.which == 13 ? 13 : e.charCode;
+	// XXX check that following cannot be simplified to charCode = e.which;
+	var charCode = e.which == 13 ? 13 : e.keyCode; // Used to be e.charCode - changed to e.keyCode for IE8 compatibility
 	// This is for Firefox
 	if (lastKeyDownIsShortcut) {
 	    return;
