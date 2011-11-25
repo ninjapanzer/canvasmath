@@ -154,7 +154,7 @@ var KeyboardShortcuts = {
 	    return false;
 	}
 	var modifiers = (e.ctrlKey ? 'C': '') + (e.altKey ? 'A': '') +
-	    (e.shiftKey ? 'S': ''); // [following removed as quick fix to make test.html work in IE9] + (e.metaKey ? 'M' : '');
+	    (e.shiftKey ? 'S': '') + (e.originalEvent.metaKey ? 'M' : '');
 	var action = keycuts[modifiers];
 	if (action) {
 	    action(e);
