@@ -2,14 +2,16 @@ var transformInline = function (tagname) {
     var element, i, text;
     var root, canvas;
     var elements = document.getElementsByTagName(tagname || "cvm");
-    initBox();
-    for (i = elements.length - 1; i >= 0; i--) {
-	element = elements[i];
-	text = element.innerHTML;
-	root = editor.parse(text);
-	canvas = expr.drawOnNewCanvas(root);
-	element.parentNode.replaceChild(canvas, element);
-    }
+    cvm.box.init();
+    $(tagname || "cvm").each(function () {
+	var el = $(this);
+	text = el.text();
+	root = cvm.edit.parser.parse(text);
+	root.selectable = el.attr("selectable");
+	root.editable = el.attr("editable");
+	canvas = cvm.expr.drawOnNewCanvas(root);
+	el.replaceWith(canvas);
+    });
 };
 
 if (!this.preventAutomaticTransform) {

@@ -350,8 +350,8 @@ var constants = {
     exp: "\u212f"
 };
 
-$.each([greekLowercase, greekUppercase], function (i, list) {
-    $.each(list, function (i, item) {
+[greekLowercase, greekUppercase].forEach(function (list) {
+    list.forEach(function (item) {
 	constants[item.name] = item.code;
     });
 });

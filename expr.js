@@ -1535,7 +1535,7 @@ priorities.forEach(function (pl) {
     pl[0].priority = pl[1];
 });
 
-cvm.expr = {
+var expr = cvm.expr = {
     Number: Number_,
     Parameter: Parameter,
     EditExpr: EditExpr,
@@ -1674,12 +1674,17 @@ cvm.expr = {
 	return Equation.instanciate(ops);
     },
     drawOnNewCanvas: function (e) {
-	var box = layout.ofExpr(e).box();
+	var box = cvm.layout.ofExpr(e).box();
 	var canvas = $("<canvas/>", {
-	    width: box.width + 2, // +2 is for IE9...
-	    height: box.height + 1,
 	    style: "vertical-align: " + box.descent + "px;"
 	})[0];
+	// For some reason, I can't set width and height in the above.
+	// Following for IE8
+	if (canvas.getContext === undefined) {
+	    G_vmlCanvasManager.initElement(canvas); 
+	}
+	canvas.width = box.width + 2; // + 2 for IE9...
+	canvas.height = box.height + 1;
 	var ctx = canvas.getContext("2d");
 	box.drawOnCanvas(ctx, 0.5, box.ascent + 0.5);
 	return canvas;
