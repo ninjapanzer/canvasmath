@@ -389,7 +389,7 @@ var testOnLoad = function () {
     };
     var lastKeyDownIsShortcut = false;
     drawExprs();
-    $(window).keydown(function (e) {
+    $(document).keydown(function (e) {
 	var sel, s;
 	// This is for Firefox
 	lastKeyDownIsShortcut = shortcuts.callFromEvent(e);
@@ -457,7 +457,7 @@ var testOnLoad = function () {
 	}
 	drawExprs();
     });
-    $(window).keypress(function (e) {
+    $(document).keypress(function (e) {
 	var c;
 	// XXX check that following cannot be simplified to charCode = e.which;
 	var charCode = e.which == 13 ? 13 : e.keyCode; // Used to be e.charCode - changed to e.keyCode for IE8 compatibility
