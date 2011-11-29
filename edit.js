@@ -85,6 +85,9 @@ var keydown = function (e) {
 
 var keypress = function (e) {
 	var c;
+	if (!selection.expr || !selection.expr.getRoot().editable) {
+	    return;
+	}
 	// XXX check that following cannot be simplified to charCode = e.which;
 	var charCode = e.which == 13 ? 13 : e.keyCode; // Used to be e.charCode - changed to e.keyCode for IE8 compatibility
 	// This is for Firefox
@@ -105,7 +108,6 @@ var keypress = function (e) {
 	    selection.reset({expr: e2});
 	} else if (selection.expr) {
 	    var newexpr = parser.addChar(selection.expr, c);
-	    console.log(newexpr);
 	    selection.reset({expr: newexpr});
 	}
 	selection.setEditing();

@@ -4,6 +4,8 @@ if (window.cvm === undefined) {
 
 (function (cvm) {
 
+var parser = cvm.parse.parser;
+
 var forEachBinding = function (box, x, y, callback) {
     box.getContainers(x, y).forEach(function (c) {
 	if (!c.box.boundLayouts) {
@@ -94,10 +96,21 @@ var Selection = Prototype.specialise({
 	}
     },
     reset: function (s) {
+//	this.clearEditing();
 	if (this.expr) {
 	    this.expr.clearSelected();
+	    var root = this.expr.getRoot();
+	    if (root) {
+		root.changed = true;
+	    }
+	}
+	if (this.expr && s && s.expr !== this.expr) {
+//	    this.expr.clearSelected();
 	    if (this.expr.getRoot()) {
 		this.expr.getRoot().changed = true;
+		if (this.expr.isEditExpr) {
+		    parser.interpret(this.expr);
+		}
 	    }
 	}
 	if (s && s.expr) {
@@ -135,7 +148,7 @@ var Selection = Prototype.specialise({
 	    return;
 	}
 	this.reset({expr: this.expr.getVPredecessor()});
-	this.setEditing();
+	//this.setEditing();
     },
     moveDown: function () {
 	var s;
@@ -143,15 +156,15 @@ var Selection = Prototype.specialise({
 	    return;
 	}
 	this.reset({expr: this.expr.getVSuccessor()});
-	this.setEditing();
+	//this.setEditing();
     },
     moveLeft: function () {
 	this.reset({expr: this.expr.getPredecessor2()});
-	this.setEditing();
+	//this.setEditing();
     },
     moveRight: function () {
 	this.reset({expr: this.expr.getSuccessor2()});
-	this.setEditing();
+	//this.setEditing();
     }
 
 });
@@ -200,7 +213,13 @@ cvm.select = {
 	    var coords = getEventCoords(e, this);
 	    selectionStart = getFirstBoundExpr(root.box,
 		coords.x, coords.y - root.box.ascent);
-	    selection.reset();
+	    selection.clearEditing();
+	    if (root.editable) {
+		selection.reset({expr: selectionStart});
+		selection.setEditing();
+	    } else {
+		selection.reset();
+	    }
 	    self.drawChanged();
 	});
 	canvas.mousemove(function (e) {
@@ -216,6 +235,7 @@ cvm.select = {
 	    }
 	    var s = selectionStart.getSelection(target);
 	    selection.reset(s);
+	    selection.clearEditing();
 	    self.drawChanged();
 	});
 	canvas.mouseup(function (e) {

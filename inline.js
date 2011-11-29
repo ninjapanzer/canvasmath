@@ -12,6 +12,7 @@ $(document).ready(function () {
     if (!this.preventAutomaticTransform) {
 	transformInline();
     }
+    cvm.parse.operations.priorityMode = false;
     cvm.select.initEditing();
     $(document).mousedown(function () {
 	cvm.select.selection.reset();
