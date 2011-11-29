@@ -184,7 +184,7 @@ var Expression = {
     },
     getRoot: function () {
 	var e = this;
-	while (!e.isRoot) {
+	while (e && !e.isRoot) {
 	    e = e.parent;
 	}
 	return e;

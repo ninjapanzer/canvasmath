@@ -96,7 +96,9 @@ var Selection = Prototype.specialise({
     reset: function (s) {
 	if (this.expr) {
 	    this.expr.clearSelected();
-	    this.expr.getRoot().changed = true;
+	    if (this.expr.getRoot()) {
+		this.expr.getRoot().changed = true;
+	    }
 	}
 	if (s && s.expr) {
 	    s.expr.getRoot().changed = true;
@@ -109,7 +111,49 @@ var Selection = Prototype.specialise({
 	    this.expr = this.start = this.stop = null;
 	    this.isSlice = false;
 	}
+    },
+    setEditing: function () {
+	/*if (!this.editing) {
+	    $("#editor-buttons").show();
+	    $("#hi-editor-buttons").hide();
+	}*/
+	this.editing = true;
+    },
+    clearEditing: function () {
+	/*if (this.editing) {
+	    $("hi-editor-buttons").show();
+	    $("editor-buttons").hide();
+	}*/
+	this.editing = false;
+    },
+    isEditing: function () {
+	return this.editing;
+    },
+    moveUp: function () {
+	var s;
+	if (!this.expr) {
+	    return;
+	}
+	this.reset({expr: this.expr.getVPredecessor()});
+	this.setEditing();
+    },
+    moveDown: function () {
+	var s;
+	if (!this.expr) {
+	    return;
+	}
+	this.reset({expr: this.expr.getVSuccessor()});
+	this.setEditing();
+    },
+    moveLeft: function () {
+	this.reset({expr: this.expr.getPredecessor2()});
+	this.setEditing();
+    },
+    moveRight: function () {
+	this.reset({expr: this.expr.getSuccessor2()});
+	this.setEditing();
     }
+
 });
 
 var selection = Selection.instanciate();
@@ -117,6 +161,9 @@ var selectionStart;
 
 cvm.select = {
     roots: [],
+    initEditing: function () {
+	cvm.edit.init(selection);
+    },
     addCvm: function (el) {
 	el = $(el);
 	var text = el.text();

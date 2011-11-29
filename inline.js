@@ -12,6 +12,7 @@ $(document).ready(function () {
     if (!this.preventAutomaticTransform) {
 	transformInline();
     }
+    cvm.select.initEditing();
     $(document).mousedown(function () {
 	cvm.select.selection.reset();
 	cvm.select.drawChanged();
