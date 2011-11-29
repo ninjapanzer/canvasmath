@@ -182,6 +182,13 @@ var Expression = {
     getBottomChild: function () {
 	return this.lastChild;
     },
+    getRoot: function () {
+	var e = this;
+	while (!e.isRoot) {
+	    e = e.parent;
+	}
+	return e;
+    },
     getPreviousLeaf: function () {
 	// Unused
 	var e;
@@ -1674,15 +1681,18 @@ var expr = cvm.expr = {
 	return Equation.instanciate(ops);
     },
     drawOnNewCanvas: function (e) {
-	var box = cvm.layout.ofExpr(e).box();
-	var canvas = $("<canvas/>", {
-	    style: "vertical-align: " + box.descent + "px;"
-	})[0];
-	// For some reason, I can't set width and height in the above.
+	var canvas = $("<canvas/>")[0];
 	// Following for IE8
 	if (canvas.getContext === undefined) {
 	    G_vmlCanvasManager.initElement(canvas); 
 	}
+	this.drawOnCanvas(e, canvas);
+	return canvas;
+    },
+    drawOnCanvas: function (e, canvas) {
+	var box = cvm.layout.ofExpr(e).box();
+	e.box = box;
+	canvas.style.verticalAlign = box.descent + "px";
 	canvas.width = box.width + 2; // + 2 for IE9...
 	canvas.height = box.height + 1;
 	var ctx = canvas.getContext("2d");
