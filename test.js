@@ -1,5 +1,5 @@
-var parser = cvm.edit.parser;
-var operations = cvm.edit.operations;
+var parser = cvm.parse.parser;
+var operations = cvm.parse.operations;
 var expr = cvm.expr;
 var layout = cvm.layout;
 
@@ -532,9 +532,9 @@ var testOnLoad = function () {
     });
     operations.priorityMode = false;
     $("#priority-mode:checked").val(false);
-    $("#prefixkwlist").text(cvm.edit.prefixKeywords.list.
+    $("#prefixkwlist").text(cvm.parse.prefixKeywords.list.
 	map(function (x) { return x.kw; }).join(" "));
-    $("#postfixkwlist").text(cvm.edit.postfixKeywords.list.
+    $("#postfixkwlist").text(cvm.parse.postfixKeywords.list.
 	map(function (x) { return x.kw; }).join(" "));
 
     [

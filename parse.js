@@ -641,7 +641,7 @@ var parser = {
     }
 };
 
-cvm.edit = {
+cvm.parse = {
     parser: parser,
     operations: operations,
     prefixKeywords: prefixKeywords,

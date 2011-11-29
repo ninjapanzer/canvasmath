@@ -120,7 +120,7 @@ cvm.select = {
     addCvm: function (el) {
 	el = $(el);
 	var text = el.text();
-	var root = cvm.edit.parser.parse(text);
+	var root = cvm.parse.parser.parse(text);
 	root.selectable = el.attr("selectable");
 	root.editable = el.attr("editable");
 	var canvas = cvm.expr.drawOnNewCanvas(root);
