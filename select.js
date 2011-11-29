@@ -84,6 +84,7 @@ var Selection = Prototype.specialise({
 	    return;
 	}
 	this.replace(expr);
+	console.log('paste', expr);
 	this.reset({expr: expr});
     },
     layout: function (layout) {
