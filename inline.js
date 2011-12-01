@@ -14,7 +14,7 @@ $(document).ready(function () {
     }
     cvm.parse.operations.priorityMode = false;
     cvm.select.initEditing();
-    $(document).mousedown(function () {
+    $(document.body).mousedown(function () {
 	cvm.select.selection.reset();
 	cvm.select.drawChanged();
     });

@@ -103,10 +103,7 @@ var Selection = Prototype.specialise({
 	    if (root) {
 		root.changed = true;
 	    }
-	} else {
-	    $("#editor-buttons-container").hide();
 	}
-	
 	if (this.expr && s && s.expr !== this.expr) {
 	    if (root) {
 		root.changed = true;
@@ -130,6 +127,7 @@ var Selection = Prototype.specialise({
 	} else {
 	    this.expr = this.start = this.stop = null;
 	    this.isSlice = false;
+	    this.root = null;
 	    $("#editor-buttons-container").hide();
 	}
     },

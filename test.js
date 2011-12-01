@@ -230,25 +230,6 @@ var PositionedExpressions = Prototype.specialise({
     }
 });
 
-var Button = Prototype.specialise();
-
-var InputButton = Button.specialise({
-    action: function (selection) {
-	if (!selection.expr) {
-	    return;
-	}
-	var i;
-	var e = selection.expr;
-	for (i = 0; i < this.input.length; i++) {
-	    e = parser.addChar(e, this.input.charAt(i));
-	}
-	selection.reset({expr: e});
-    },
-    create: function (input) {
-	return this.instanciate({input: input});
-    }
-});
-
 var SimpleButton = Prototype.specialise({
     action: function (selection) {
 	var e = selection.expr;

@@ -5,6 +5,7 @@ if (window.cvm === undefined) {
 (function (cvm) {
 
 var parser = cvm.parse.parser;
+var operations = cvm.parse.operations;
 var expr = cvm.expr;
 var select = cvm.select;
 
@@ -151,6 +152,74 @@ var cutShortcut = shortcuts.add('C-x', function () {
     select.drawChanged();
 });
 
+
+var SimpleButton = Prototype.specialise({
+    action: function (selection) {
+	var e = selection.expr;
+	var e1;
+	if (selection.isEditing()) {
+	    e = parser.interpret(e);
+	    if (this.isPostfix && e.isEditExpr && e.isEmpty() && !e.operand) {
+		selection.reset({expr: this.getExpr(e).parent.firstChild});
+		selection.setEditing();
+	    } else {
+		e1 = parser.addChar(e, this.getInput(e));
+		selection.reset({expr: e1});
+		selection.setEditing();
+	    }
+	} else if (selection.isSlice) {
+	    var r = expr.root(e.fromSlice(selection));
+	    e1 = this.getExpr(r.expr);
+	    e.replaceSlice(selection, r.expr);
+	    selection.reset({expr: e1});
+	} else {
+	    selection.reset({expr: this.getExpr(e)});
+	}
+    }
+});
+
+var powerButton = SimpleButton.specialise({
+    isPostfix: true,
+    getInput: function (e) { return  " ^ "; },
+    getExpr: function (e) { return operations.pow(e); }
+});
+
+var subscriptButton = SimpleButton.specialise({
+    isPostfix: true,
+    getInput: function (e) { return " _ "; },
+    getExpr: function (e) { return operations.subscript(e); }
+});
+
+var sqrtButton = SimpleButton.specialise({
+    getInput: function (e) { return " sqrt "; },
+    getExpr: function (e) {
+	var e1 = e.copy();
+	e.parent.replaceChild(e, expr.sqrt(e1));
+	return e1;
+    }
+});
+
+var cbrtButton = SimpleButton.specialise({
+    getInput: function (e) { return " 3 root "; },
+    getExpr: function (e) {
+	var n = expr.number(3);
+	e.parent.replaceChild(e, n);
+	return operations.nthRoot(n, e); 
+    }
+});
+
+var rootButton = SimpleButton.specialise({
+    isPostfix: true,
+    getInput: function (e) { return " root "; },
+    getExpr: function (e) { return operations.nthRoot(e); }
+});
+
+var fractionButton = SimpleButton.specialise({
+    isPostfix: true,
+    getInput: function (e) { return " / "; },
+    getExpr: function (e) { return operations.frac(e); }
+});
+
 cvm.edit = {
     init: function (sel) {
 	selection = sel;
@@ -167,15 +236,17 @@ cvm.edit = {
 	    var id = x[0];
 	    var btn = x[1];
 	    var listener = function (e) {
+		console.log(e);
 		if (selection.expr) {
 		    btn.action(selection);
 		    cvm.select.drawChanged();
 		}
+		return false;
 	    };
-	    $("#"+id).click(listener);
-	    $("#hi-" + id).click(listener);
+	    console.log("Binding button ", id);
+	    $("#"+id).mousedown(listener);
+	    $("#hi-" + id).mousedown(listener);
 	});
-
     }
 };
 
