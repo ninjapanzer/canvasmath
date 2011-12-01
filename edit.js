@@ -156,6 +156,26 @@ cvm.edit = {
 	selection = sel;
 	$(document).keydown(keydown);
 	$(document).keypress(keypress);
+	[
+	    ["power-button", powerButton],
+	    ["subscript-button", subscriptButton],
+	    ["sqrt-button", sqrtButton],
+	    ["cbrt-button", cbrtButton],
+	    ["root-button", rootButton],
+	    ["fraction-button", fractionButton]
+	].forEach(function (x) {
+	    var id = x[0];
+	    var btn = x[1];
+	    var listener = function (e) {
+		if (selection.expr) {
+		    btn.action(selection);
+		    cvm.select.drawChanged();
+		}
+	    };
+	    $("#"+id).click(listener);
+	    $("#hi-" + id).click(listener);
+	});
+
     }
 };
 

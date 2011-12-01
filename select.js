@@ -84,7 +84,6 @@ var Selection = Prototype.specialise({
 	    return;
 	}
 	this.replace(expr);
-	console.log('paste', expr);
 	this.reset({expr: expr});
     },
     layout: function (layout) {
@@ -97,25 +96,32 @@ var Selection = Prototype.specialise({
 	}
     },
     reset: function (s) {
-//	this.clearEditing();
+	var root;
 	if (this.expr) {
 	    this.expr.clearSelected();
-	    var root = this.expr.getRoot();
+	    root = this.expr.getRoot();
 	    if (root) {
 		root.changed = true;
 	    }
+	} else {
+	    $("#editor-buttons-container").hide();
 	}
+	
 	if (this.expr && s && s.expr !== this.expr) {
-//	    this.expr.clearSelected();
-	    if (this.expr.getRoot()) {
-		this.expr.getRoot().changed = true;
+	    if (root) {
+		root.changed = true;
 		if (this.expr.isEditExpr) {
 		    parser.interpret(this.expr);
 		}
 	    }
 	}
 	if (s && s.expr) {
-	    s.expr.getRoot().changed = true;
+	    this.root = root = s.expr.getRoot();
+	    if (!root) {
+		throw "expression should be rooted!";
+	    }
+	    this.updateEditingMenu();
+	    root.changed = true;
 	    this.expr = s.expr;
 	    this.expr.setSelected(this);
 	    this.start = s.start;
@@ -124,20 +130,34 @@ var Selection = Prototype.specialise({
 	} else {
 	    this.expr = this.start = this.stop = null;
 	    this.isSlice = false;
+	    $("#editor-buttons-container").hide();
+	}
+    },
+    updateEditingMenu: function () {
+	var root = this.root;
+	if (root.editable) {
+	    var rootOffset = $(root.canvas).offset();
+	    $("#editor-buttons-container").show();
+	    $("#editor-buttons-container").offset({
+		top: rootOffset.top + root.box.height + 10,
+		left: rootOffset.left
+	    });
+	} else {
+	    $("#editor-buttons-container").hide();
 	}
     },
     setEditing: function () {
-	/*if (!this.editing) {
+	if (!this.editing) {
 	    $("#editor-buttons").show();
 	    $("#hi-editor-buttons").hide();
-	}*/
+	}
 	this.editing = true;
     },
     clearEditing: function () {
-	/*if (this.editing) {
-	    $("hi-editor-buttons").show();
-	    $("editor-buttons").hide();
-	}*/
+	if (this.editing) {
+	    $("#hi-editor-buttons").show();
+	    $("#editor-buttons").hide();
+	}
 	this.editing = false;
     },
     isEditing: function () {
@@ -177,6 +197,7 @@ cvm.select = {
     roots: [],
     initEditing: function () {
 	cvm.edit.init(selection);
+	selection.reset();
     },
     addCvm: function (el) {
 	el = $(el);
@@ -203,6 +224,9 @@ cvm.select = {
 	    if (root.changed) {
 		cvm.expr.drawOnCanvas(root, root.canvas);
 		root.changed = false;
+		if (root === selection.root) {
+		    selection.updateEditingMenu();
+		}
 	    }
 	});
     },
