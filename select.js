@@ -40,7 +40,7 @@ var getFirstBoundExpr = function (box, x, y) {
 
 var Selection = Prototype.specialise({
     __init__: function (s) {
-	this.reset(s);
+	//this.reset(s);
     },
     replace: function (newExpr) {
 	if (this.isSlice) {
@@ -128,33 +128,32 @@ var Selection = Prototype.specialise({
 	    this.expr = this.start = this.stop = null;
 	    this.isSlice = false;
 	    this.root = null;
-	    $("#editor-buttons-container").hide();
+	    cvm.edit.menu.hide();
 	}
     },
     updateEditingMenu: function () {
 	var root = this.root;
 	if (root.editable) {
 	    var rootOffset = $(root.canvas).offset();
-	    $("#editor-buttons-container").show();
-	    $("#editor-buttons-container").offset({
-		top: rootOffset.top + root.box.height + 10,
-		left: rootOffset.left
-	    });
+	    cvm.edit.menu.showAt(
+		rootOffset.left,
+		rootOffset.top + root.box.height + 10
+	    );
 	} else {
-	    $("#editor-buttons-container").hide();
+	    cvm.edit.menu.hide();
 	}
     },
     setEditing: function () {
 	if (!this.editing) {
-	    $("#editor-buttons").show();
-	    $("#hi-editor-buttons").hide();
+	    cvm.edit.menu.showRow("simple-buttons");
+	    cvm.edit.menu.hideRow("hi-simple-buttons");
 	}
 	this.editing = true;
     },
     clearEditing: function () {
 	if (this.editing) {
-	    $("#hi-editor-buttons").show();
-	    $("#editor-buttons").hide();
+	    cvm.edit.menu.hideRow("simple-buttons");
+	    cvm.edit.menu.showRow("hi-simple-buttons");
 	}
 	this.editing = false;
     },

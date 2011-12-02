@@ -220,33 +220,85 @@ var fractionButton = SimpleButton.specialise({
     getExpr: function (e) { return operations.frac(e); }
 });
 
+var editMenuData = [
+    { img: "power-button", action: powerButton },
+    { img: "subscript-button", action: subscriptButton},
+    { img: "sqrt-button", action: sqrtButton},
+    { img: "cbrt-button", action: cbrtButton},
+    { img: "root-button", action: rootButton},
+    { img: "fraction-button", actio: fractionButton}
+];
+
+var highlightEditMenuData = [
+    { img: "hi-power-button", action: powerButton },
+    { img: "hi-subscript-button", action: subscriptButton},
+    { img: "hi-sqrt-button", action: sqrtButton},
+    { img: "hi-cbrt-button", action: cbrtButton},
+    { img: "hi-root-button", action: rootButton},
+    { img: "hi-fraction-button", actio: fractionButton}
+];
+
+
+var EditMenu = Prototype.specialise({
+    __init__: function (id) {
+	this.id = id;
+	this.div = $("<div></div>", { id: id}).css({position: 'absolute'});
+	$(document.body).append(this.div);
+	this.hide();
+	this.rows = {};
+    },
+    showAt: function (x, y) {
+	console.log("here", x, y);
+	this.div.show().offset({top: y, left: x});
+    },
+    hide: function () {
+	this.div.hide();
+    },
+    hideRow: function (rowId) {
+	var row = this.rows[rowId];
+	row && row.hide();
+    },
+    showRow: function (rowId) {
+	var row = this.rows[rowId];
+	row && row.show();
+    },
+    addRow: function (rowId, rowData) {
+	var self = this;
+	var row = $("<div></div>", { id: rowId });
+	this.rows[rowId] = row;
+	rowData.forEach(function (x) {
+	    var action = x.action;
+	    var listener = function (e) {
+		if (selection.expr) {
+		    action.action(selection, self);
+		    cvm.select.drawChanged();
+		}
+		return false;
+	    };
+	    var item;
+	    if (x.img) {
+		item = $("<img src='img/" + x.img + ".png'>");
+	    } else {
+		throw "unknown menu item type";
+	    }
+	    item.addClass('editor-button');
+	    item.mousedown(listener);
+	    row.append(item);
+	});
+	this.div.append(row);
+    }	
+});
+
+
+
 cvm.edit = {
     init: function (sel) {
 	selection = sel;
 	$(document).keydown(keydown);
 	$(document).keypress(keypress);
-	[
-	    ["power-button", powerButton],
-	    ["subscript-button", subscriptButton],
-	    ["sqrt-button", sqrtButton],
-	    ["cbrt-button", cbrtButton],
-	    ["root-button", rootButton],
-	    ["fraction-button", fractionButton]
-	].forEach(function (x) {
-	    var id = x[0];
-	    var btn = x[1];
-	    var listener = function (e) {
-		console.log(e);
-		if (selection.expr) {
-		    btn.action(selection);
-		    cvm.select.drawChanged();
-		}
-		return false;
-	    };
-	    console.log("Binding button ", id);
-	    $("#"+id).mousedown(listener);
-	    $("#hi-" + id).mousedown(listener);
-	});
+	this.menu = EditMenu.instanciate("edit-menu");
+	this.menu.addRow("simple-buttons", editMenuData);
+	this.menu.addRow("hi-simple-buttons", highlightEditMenuData);
     }
 };
 
