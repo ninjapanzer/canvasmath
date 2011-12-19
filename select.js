@@ -144,17 +144,11 @@ var Selection = Prototype.specialise({
 	}
     },
     setEditing: function () {
-	if (!this.editing) {
-	    cvm.edit.menu.showRow("simple-buttons");
-	    cvm.edit.menu.hideRow("hi-simple-buttons");
-	}
+	cvm.edit.menu.switchMode('edit');
 	this.editing = true;
     },
     clearEditing: function () {
-	if (this.editing) {
-	    cvm.edit.menu.hideRow("simple-buttons");
-	    cvm.edit.menu.showRow("hi-simple-buttons");
-	}
+	cvm.edit.menu.switchMode('hilight');
 	this.editing = false;
     },
     isEditing: function () {

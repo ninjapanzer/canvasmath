@@ -333,8 +333,8 @@ var greekUppercase = [
     {name:"Nu", code:"\u039d"},
     {name:"Xi", code:"\u039e"},
     {name:"Omicron", code:"\u039f"},
-    {name:"Pi", code:"\U03a0"},
-    {name:"Rho", code:"\U03a1"},
+    {name:"Pi", code:"\u03a0"},
+    {name:"Rho", code:"\u03a1"},
     {name:"Sigma", code:"\u03a3"},
     {name:"Tau", code:"\u03a4"},
     {name:"Upsilon", code:"\u03a5"},
@@ -442,6 +442,14 @@ prefixKeywords.updateWithObject(prefixUnaryOps, "PrefixOp");
 postfixKeywords.updateWithObject(infixBinaryOps, "InfixOp");
 postfixKeywords.updateWithObject(postfixUnaryOps, "PostfixOp");
 
+var directives = {
+    color: function (color, target) {
+	var colorExpr = expr.color(target.operand, color);
+	target.parent.replaceChild(target, colorExpr);
+	return colorExpr;
+    }
+};
+
 var parser = {
     interpretNumber: function (input, target) {
 	var numberExpr = expr.number(parseFloat(input));
@@ -452,6 +460,24 @@ var parser = {
 	    target.parent.replaceChild(target, numberExpr);
 	}
 	return numberExpr;
+    },
+    interpretDirective: function (input, target) {
+	input = input.substring(1, input.length - 1);
+	var parts = input.split(":", 2);
+	var cmd, args;
+	if (parts.length == 1) {
+	    cmd = input;
+	    args = "";
+	} else {
+	    cmd = parts[0];
+	    args = parts[1];
+	}
+	if (directives[cmd]) {
+	    return directives[cmd](args, target);
+	} else {
+	    console && console.log("Unknown directive: " + cmd);
+	    return target;
+	}
     },
     interpretParameter: function (input, target) {
 	var param = expr.parameter(input);
@@ -523,14 +549,41 @@ var parser = {
 	}
 	// XXX Hack to prevent weird bug:
 	target.content = null;
-	if (input[0] === " ") {
+	if (input.charAt(0) === " ") {
 	    // input starts with space: force interpretation of target
 	    // then continue
 	    target = this.interpret(target);
 	    input = input.substr(1);
 	    return this.interpret(target, input, ongoing);
 	}
-	var groups = /^\d+(?:\.\d*)?/.exec(input);
+	var groups = /^\\[^\\]+\\/.exec(input);
+	if (groups) {
+	    // Input starts with a directive
+	    var directive = groups[0];
+	    if (directive.length === input.length) {
+		// Input is just a directive
+		if (ongoing) {
+		    // Input ongoing so keep it as it is
+		    target.content = input;
+		    return target;
+		}
+		// Input finished so apply directive
+		return this.interpretDirective(directive, target);
+	    }
+	    // There is more after the directive
+	    target = this.interpretDirective(directive, target);
+	    input = input.substr(directive.length);
+	    return this.interpret(target, input, ongoing);
+	}
+	if (input.charAt(0) === "\\") {
+	    // We're writing a directive but it's not finished
+	    if (ongoing) {
+		target.content = input;
+		return target;
+	    }
+	    throw "unfinished directive";
+	}
+	groups = /^\d+(?:\.\d*)?/.exec(input);
 	if (groups) {
 	    // Input starts with a number
 	    var number = groups[0];
@@ -645,7 +698,9 @@ cvm.parse = {
     parser: parser,
     operations: operations,
     prefixKeywords: prefixKeywords,
-    postfixKeywords: postfixKeywords
+    postfixKeywords: postfixKeywords,
+    greekLowercase: greekLowercase,
+    greekUppercase: greekUppercase
 };
 
 })(cvm);

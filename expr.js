@@ -1500,6 +1500,23 @@ var Derivative = {
 };
 Derivative = FixedChildrenExpression.specialise(Derivative);
 
+var ColorExpr = {
+    __name__: "ColorExpr",
+    extraProperties: ["color"],
+    __init__: function () {
+	OneChildExpression.__init__.apply(this, arguments);
+	this.priority = this.child.priority;
+    },
+    layout: function (layout) {
+	return layout.color(this.color, this.child.layout(layout));
+    },
+    replaceChild: function () {
+	OneChildExpression.replaceChild.apply(this, arguments);
+	this.priority = this.child.priority;
+    }
+};
+ColorExpr = OneChildExpression.specialise(ColorExpr);
+
 //
 // Set priorities
 //
@@ -1698,6 +1715,9 @@ var expr = cvm.expr = {
 	var ctx = canvas.getContext("2d");
 	box.drawOnCanvas(ctx, 0.5, box.ascent + 0.5);
 	return canvas;
+    },
+    color: function (e, color) {
+	return ColorExpr.instanciate(e, color);
     }
 };
 

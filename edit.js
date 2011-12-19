@@ -57,25 +57,31 @@ var keydown = function (e) {
 	    e.stopPropagation();
 	    selection.moveRight();
 	    break;
-	case KEY.BACKSPACE: // Backspace
+	case KEY.BACKSPACE:
 	    e.preventDefault();
 	    e.stopPropagation();
 	    if (selection.expr) {
 		if (!selection.expr.getRoot().editable) {
 		    return;
 		}
+		selection.expr.getRoot().changed = true;
 		if (selection.expr.isEditExpr) {
 		    s = selection.expr.content;
 		    if (s) {
 			s = s.substr(0, s.length - 1);
-			parser.interpret(selection.expr, s, true);
+			selection.expr.content = s;
+			//parser.interpret(selection.expr, s, true);
 		    } else {
-			var pred = selection.expr.getPredecessor();
-			var newParent = selection.remove();
-			if (pred.isRoot) {
-			    posexprs.remove(pred);
+			var editExpr = selection.expr;
+			var child = selection.expr.operand;
+			if (child) {
+			    selection.reset();
+			    editExpr.parent.replaceChild(editExpr, child);
+			    selection.reset({expr: child});
 			} else {
-			    selection.reset({expr: newParent || pred});
+			    var pred = editExpr.getPredecessor();
+			    var newParent = selection.remove();
+			    selection.reset({expr: pred || newParent});
 			}
 		    }
 		} else {
@@ -86,7 +92,7 @@ var keydown = function (e) {
 		selection.setEditing();
 	    }
 	    break;
-	case KEY.TAB: // Tab
+	case KEY.TAB:
 	    e.preventDefault();
 	    e.stopPropagation();
 	    if (selection.expr && selection.expr.isEditExpr) {
@@ -178,16 +184,60 @@ var SimpleButton = Prototype.specialise({
     }
 });
 
+var TextButton = Prototype.specialise({
+    __init__: function (text) {
+	this.text = text;
+	this.button = $(expr.drawOnNewCanvas(parser.parse(text)));
+    },
+    action: function (selection) {
+	var e = selection.expr;
+	if (selection.isEditing()) {
+	    e = parser.interpret(e);
+	}
+	selection.reset({expr: parser.interpret(e, this.text)});
+    }
+});
+
+var SubMenuButton = Prototype.specialise({
+    __init__: function (submenu, btn) {
+	this.submenu = submenu;
+	this.submenuVisible = false;
+	this.button = btn;
+    },
+    action: function (selection, menu) {
+	this.submenuVisible = !this.submenuVisible;
+	if (this.submenuVisible) {
+	    menu.showRow(this.submenu);
+	    this.button.css({'background-color': "yellow"});
+	} else {
+	    menu.hideRow(this.submenu);
+	    this.button.css({'background-color': "white"});
+	}
+    }
+});
+
+var image = function (name) {
+    return $('<img src="img/' + name + '.png">');
+};
+
+var text = function (text) {
+    return $(expr.drawOnNewCanvas(parser.parse(text)));
+};
+
 var powerButton = SimpleButton.specialise({
     isPostfix: true,
     getInput: function (e) { return  " ^ "; },
-    getExpr: function (e) { return operations.pow(e); }
+    getExpr: function (e) { return operations.pow(e); },
+    button: image("power-button"),
+    hiButton: image("hi-power-button")
 });
 
 var subscriptButton = SimpleButton.specialise({
     isPostfix: true,
     getInput: function (e) { return " _ "; },
-    getExpr: function (e) { return operations.subscript(e); }
+    getExpr: function (e) { return operations.subscript(e); },
+    button: image("subscript-button"),
+    hiButton: image("hi-subscript-button")
 });
 
 var sqrtButton = SimpleButton.specialise({
@@ -196,7 +246,9 @@ var sqrtButton = SimpleButton.specialise({
 	var e1 = e.copy();
 	e.parent.replaceChild(e, expr.sqrt(e1));
 	return e1;
-    }
+    },
+    button: image("sqrt-button"),
+    hiButton: image("hi-sqrt-button")
 });
 
 var cbrtButton = SimpleButton.specialise({
@@ -205,39 +257,35 @@ var cbrtButton = SimpleButton.specialise({
 	var n = expr.number(3);
 	e.parent.replaceChild(e, n);
 	return operations.nthRoot(n, e); 
-    }
+    },
+    button: image("cbrt-button"),
+    hiButton: image("hi-cbrt-button")
 });
 
 var rootButton = SimpleButton.specialise({
     isPostfix: true,
     getInput: function (e) { return " root "; },
-    getExpr: function (e) { return operations.nthRoot(e); }
+    getExpr: function (e) { return operations.nthRoot(e); },
+    button: image("root-button"),
+    hiButton: image("hi-root-button")
 });
 
 var fractionButton = SimpleButton.specialise({
     isPostfix: true,
     getInput: function (e) { return " / "; },
-    getExpr: function (e) { return operations.frac(e); }
+    getExpr: function (e) { return operations.frac(e); },
+    button: image("fraction-button"),
+    hiButton: image("hi-fraction-button")
 });
 
 var editMenuData = [
-    { img: "power-button", action: powerButton },
-    { img: "subscript-button", action: subscriptButton},
-    { img: "sqrt-button", action: sqrtButton},
-    { img: "cbrt-button", action: cbrtButton},
-    { img: "root-button", action: rootButton},
-    { img: "fraction-button", actio: fractionButton}
+    powerButton,
+    subscriptButton,
+    sqrtButton,
+    cbrtButton,
+    rootButton,
+    fractionButton
 ];
-
-var highlightEditMenuData = [
-    { img: "hi-power-button", action: powerButton },
-    { img: "hi-subscript-button", action: subscriptButton},
-    { img: "hi-sqrt-button", action: sqrtButton},
-    { img: "hi-cbrt-button", action: cbrtButton},
-    { img: "hi-root-button", action: rootButton},
-    { img: "hi-fraction-button", actio: fractionButton}
-];
-
 
 var EditMenu = Prototype.specialise({
     __init__: function (id) {
@@ -246,9 +294,9 @@ var EditMenu = Prototype.specialise({
 	$(document.body).append(this.div);
 	this.hide();
 	this.rows = {};
+	this.mode = 'edit';
     },
     showAt: function (x, y) {
-	console.log("here", x, y);
 	this.div.show().offset({top: y, left: x});
     },
     hide: function () {
@@ -262,28 +310,33 @@ var EditMenu = Prototype.specialise({
 	var row = this.rows[rowId];
 	row && row.show();
     },
+    switchMode: function (mode) {
+	$("." + this.mode + "-only").hide();
+	$("." + mode + "-only").show();
+	this.mode = mode;
+    },
     addRow: function (rowId, rowData) {
 	var self = this;
 	var row = $("<div></div>", { id: rowId });
 	this.rows[rowId] = row;
-	rowData.forEach(function (x) {
-	    var action = x.action;
+	rowData.forEach(function (btn) {
 	    var listener = function (e) {
 		if (selection.expr) {
-		    action.action(selection, self);
+		    btn.action(selection, self);
 		    cvm.select.drawChanged();
 		}
 		return false;
 	    };
-	    var item;
-	    if (x.img) {
-		item = $("<img src='img/" + x.img + ".png'>");
-	    } else {
-		throw "unknown menu item type";
+	    btn.button.addClass('editor-button');
+	    btn.button.mousedown(listener);
+	    row.append(btn.button);
+	    if (btn.hiButton) {
+		btn.button.addClass('edit-only');
+		btn.hiButton.addClass('editor-button');
+		btn.hiButton.addClass('hilight-only');
+		btn.hiButton.mousedown(listener);
+		row.append(btn.hiButton);
 	    }
-	    item.addClass('editor-button');
-	    item.mousedown(listener);
-	    row.append(item);
 	});
 	this.div.append(row);
     }	
@@ -297,8 +350,19 @@ cvm.edit = {
 	$(document).keydown(keydown);
 	$(document).keypress(keypress);
 	this.menu = EditMenu.instanciate("edit-menu");
+	editMenuData.push(
+	    SubMenuButton.instanciate("greek-lowercase", text("alpha beta gamma"))
+	);
 	this.menu.addRow("simple-buttons", editMenuData);
-	this.menu.addRow("hi-simple-buttons", highlightEditMenuData);
+	var greekMenuData = [cvm.parse.greekLowercase, cvm.parse.greekUppercase]
+	    .map(function (letters) {
+		return letters.map(function (item) {
+		    return TextButton.instanciate(item.name);
+		});
+	    });
+	this.menu.addRow("greek-lowercase", greekMenuData[0]);
+	this.menu.hideRow("greek-lowercase");
+	this.menu.addRow("greek-uppercase", greekMenuData[1]);
     }
 };
 
