@@ -68,7 +68,8 @@ window.addEventListener("load", function () {
 	if (nonMathML) {
 	    row.append("<td>No MathML</td>");
 	} else {
-	    row.append("<td><pre>" + mathmlText + "</pre></td>");
+	    var pre = $("<pre/>").text(mathmlText);
+	    row.append($("<td/>").append(pre));
 	}
 	if (!nonMathML) {
 	    row.append($("<td/>").append(expr.drawOnNewCanvas(parsedMathML)));
