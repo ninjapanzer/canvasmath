@@ -38,7 +38,10 @@ var nonMathMLTests = [
 ];
 
 window.addEventListener("load", function () {
-    var tbody = $("tests");
+    var tbody = $("#tests");
+    var parser = cvm.parse.parser;
+    var mathMLParser = cvm.mathml.parser;
+    var expr = cvm.expr;
     var showTest = function (test, nonMathML) {
 	var e = parser.parse(test);
 	// The following doesn't recognise entities such as &alpha;
@@ -54,18 +57,23 @@ window.addEventListener("load", function () {
 	    var mathMLBits = MathMLSerializer.serializeToBits(e);
 	    var mathmlText = MathMLSerializer.bitsToMathML(mathMLBits, 0, 2);
 	    var mathmlHTML = MathMLSerializer.bitsToMathML(mathMLBits, 0, 0, true);
-	    var parent = $.make("math");
+	    var parent = document.createElement("math");
 	    parent.innerHTML = mathmlHTML;
 	    var mathml = parent.firstElementChild;
 	    var parsedMathML = mathMLParser.parse(mathml);
 	}
-	var row = $.make("tr",
-	    $.make("td", $.make("pre", test)),
-	    $.make("td", expr.drawOnNewCanvas(e)),
-	    $.make("td", nonMathML ? "No MathML" : $.make("pre", mathmlText)),
-	    $.make("td", !nonMathML && expr.drawOnNewCanvas(parsedMathML))
-	);
-	tbody.appendChild(row);
+	var row = $("<tr/>");
+	row.append("<td><pre>" + test + "</pre></td>");
+	row.append($("<td/>").append(expr.drawOnNewCanvas(e)));
+	if (nonMathML) {
+	    row.append("<td>No MathML</td>");
+	} else {
+	    row.append("<td><pre>" + mathmlText + "</pre></td>");
+	}
+	if (!nonMathML) {
+	    row.append($("<td/>").append(expr.drawOnNewCanvas(parsedMathML)));
+	}
+	tbody.append(row);
     };
     tests.forEach(function (test) { showTest(test); });
     nonMathMLTests.forEach(function (test) { showTest(test, true); });

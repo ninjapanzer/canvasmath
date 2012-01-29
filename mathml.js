@@ -1,3 +1,8 @@
+(function (cvm) {
+
+var initBox = cvm.box.init;
+var expr = cvm.expr;
+
 var mathMLTransformInline = function (tagname) {
     var element, i, text;
     var root, canvas;
@@ -11,7 +16,7 @@ var mathMLTransformInline = function (tagname) {
     }
 };
 
-if (!this.preventAutomaticTransform) {
+if (!window.preventAutomaticTransform) {
     window.addEventListener('load', function () {
 	mathMLTransformInline();
     }, false);
@@ -251,3 +256,9 @@ mathMLParser.registerFunction("not", 1, function (arg) {
 ['eq', 'lt', 'gt', 'geq', 'leq'].forEach(function (relation) {
     mathMLParser.registerRelation(relation);
 });
+
+cvm.mathml = {
+    parser: mathMLParser
+};
+
+})(cvm);

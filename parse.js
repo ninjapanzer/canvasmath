@@ -444,9 +444,17 @@ postfixKeywords.updateWithObject(postfixUnaryOps, "PostfixOp");
 
 var directives = {
     color: function (color, target) {
-	var colorExpr = expr.color(target.operand, color);
-	target.parent.replaceChild(target, colorExpr);
-	return colorExpr;
+	var colorExpr;
+	if (target.operand) {
+	    colorExpr = expr.color(target.operand, color);
+	    target.parent.replaceChild(target, colorExpr);
+	    return colorExpr;
+	} else {
+	    var editExpr = expr.editExpr();
+	    colorExpr = expr.color(editExpr, color);
+	    target.parent.replaceChild(target, colorExpr);
+	    return editExpr;
+	}
     }
 };
 
