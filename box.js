@@ -643,7 +643,6 @@ var HLine = {
     },*/
     drawOnCanvas: function (ctx, x, y) {
 	ctx.save();
-	ctx.fillStyle = "black";
 	ctx.fillRect(x, y - this.ascent, this.width, this.height);
 	ctx.restore();
     },
