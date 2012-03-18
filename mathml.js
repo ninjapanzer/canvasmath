@@ -253,7 +253,7 @@ mathMLParser.registerFunction("or", null, function (args) {
 mathMLParser.registerFunction("not", 1, function (arg) {
     return expr.not(arg);
 });
-['eq', 'lt', 'gt', 'geq', 'leq'].forEach(function (relation) {
+['eq', 'neq', 'lt', 'gt', 'geq', 'leq'].forEach(function (relation) {
     mathMLParser.registerRelation(relation);
 });
 

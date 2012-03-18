@@ -64,6 +64,7 @@ operators.addSumOperator("minusPlus", "\u2213", "\u2213");
 operators.addInfix("times", operators.simpleOperator("\u00D7", 1));
 
 operators.addInfix("eq", operators.simpleOperator("=", 5));
+operators.addInfix("neq", operators.simpleOperator("\u2260", 5));
 operators.addInfix("leq", operators.simpleOperator("\u2264", 5));
 operators.addInfix("geq", operators.simpleOperator("\u2265", 5));
 operators.addInfix("lt", operators.simpleOperator("<", 5));
