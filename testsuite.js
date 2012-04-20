@@ -13,10 +13,10 @@ var tests = [
     "floor(n) + ceil(n^2)",
     "6!",
     "sum xy",
-    "sum from (i=1) to n (1/i)",
+/*    "sum from (i=1) to n (1/i)",
     "product from (k=1) to n (1 - 1/k)",
     "integral from 0 to 1 (y d.x)",
-    "integral from 0 to (pi/2) ((sinx) d.x)",
+    "integral from 0 to (pi/2) ((sinx) d.x)",*/
     "integral fg",
     "f[x, sin t, sqrt3]",
     "(integral f[x] d.x)^2",
