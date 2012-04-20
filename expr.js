@@ -1698,7 +1698,7 @@ var expr = cvm.expr = {
 	return Equation.instanciate(ops);
     },
     drawOnNewCanvas: function (e) {
-	var canvas = $("<canvas/>")[0];
+	var canvas = document.createElement("canvas");//$("<canvas/>")[0];
 	// Following for IE8
 	if (canvas.getContext === undefined) {
 	    G_vmlCanvasManager.initElement(canvas); 
